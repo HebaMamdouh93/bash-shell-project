@@ -36,6 +36,7 @@ select_menu_fun(){
       #alter table
       ;;
     4)
+	  sortTable
       #sort table
       ;;
     5)
@@ -48,7 +49,7 @@ select_menu_fun(){
       #delete records
       ;;
     8)
-      #select records
+      selectMenu
       ;;
     9)
       #drop table
@@ -173,6 +174,82 @@ main_menu_fun(){
     esac
   done
 }
+################################## SELECT & SORT #############################################
+#select Part
+function selectMenu(){
+  echo 
+  echo " _________________ Select menu _________________________"
+  echo "| 1. Select Specific Column from a Table                |"
+  echo "| 2. Select All Columns Matching a Certain Regex        |"
+  echo "| 3. Select Specific Column Matching a Certain Regex    |"
+  echo "| 4. Back To Select Menu                                |"
+  echo "| 5. Back To Main Menu                                  |"
+  echo "| 6. Exit                                               |"
+  echo "|_______________________________________________________|"
+  echo	
 
+  while true
+  do
+  	#user insert choose
+    read -p "Enter your choose number: " num
+
+    #check user input
+    case $num in 
+      1)
+         #Select Specific Column from a Table
+         select_col
+         ;;
+      2)
+         #Select All Columns Matching a Certain Regex 
+         select_all_regex 
+         ;;
+      3)
+         #Select Specific Column Matching a Certain Regex
+         select_col_regex
+         ;;
+      4)
+         #Back To Select Menu
+         selectMenu
+         ;;
+      5)
+         #Back To Main Menu
+         cd ../..
+         main_menu_fun
+         ;;
+      6)
+         #Exit
+         exit_fun
+         ;;   
+      *) 
+         # not matched
+         matched_fun
+    esac
+  done
+}
+
+#Select Specific Column from a Table
+function select_col(){
+echo "select_col"
+}
+
+#Select All Columns Matching a Certain Regex 
+function select_all_regex(){
+echo "select_all_regex"
+}
+
+#Select Specific Column Matching a Certain Regex
+function select_col_regex(){
+echo "select_col_regex"
+} 
+
+function sortTable() {
+
+echo "sort"	
+
+}
+
+
+
+##############################################################################################
 clear
 main_menu_fun
