@@ -236,7 +236,57 @@ function selectMenu(){
 ##################################### Sort #################################################
 function sortTable() {
 
-echo "sort"	
+# Ask user to enter the table name that wanted to sort 
+  read -p "Please Enter Table Name: " tableName
+  if [[ ! -f $tableName ]]; then
+  echo "Table not existed "
+  tablesMenu
+  fi
+
+# Ask to enter the number of field that wanted to sort table according to it
+read -p "Please Enter The Name of Column: " colName 
+#get the number of field that the user entered his name 
+colNum=$(awk 'BEGIN{FS="|"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$colName'") print i}}}' $tableName)
+
+#check if field already existed in table or not
+if [[ $colNum == "" ]]; then
+  echo "Field Not exist in table"
+  tablesMenu
+else
+  colSort="-k"$colNum
+  colType=$( awk 'BEGIN{FS="|"}{if(NR=='$colNum+1') print $2}' .$tableName)
+  echo -e "Enter Type of Sort choose 1) sort ascend​ing or choose 2) sort descending : "
+  select sortType in "1" "2"
+    do
+      head -1 $tableName;
+      case $sortType in
+
+        1 )  
+             if [[ $colType == "int" ]];then
+
+         sed '1d' $tableName  | sort -n -f -t '|' $colSort ;
+
+      else
+
+         sed '1d' $tableName  | sort -f -t '|' $colSort ;
+      fi  
+      tablesMenu
+            ;;
+        2 ) if [[ $colType == "int" ]];then
+
+         sed '1d' $tableName  | sort -nr -f -t '|' $colSort ;
+
+      else
+
+         sed '1d' $tableName  | sort -r -f -t '|' $colSort ;
+      fi  
+      tablesMenu
+            ;;
+        * ) echo "Wrong Choice" ;;
+      esac
+    done
+fi  
+ 
 
 }
 ######################################## Delete Records #####################################
