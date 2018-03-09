@@ -47,6 +47,7 @@ select_menu_fun(){
       ;;
     7)
       #delete records
+      deleteMenu
       ;;
     8)
       selectMenu
@@ -179,12 +180,13 @@ main_menu_fun(){
 function selectMenu(){
   echo 
   echo " _________________ Select menu _________________________"
-  echo "| 1. Select Specific Column from a Table                |"
-  echo "| 2. Select All Columns Matching a Certain Regex        |"
-  echo "| 3. Select Specific Column Matching a Certain Regex    |"
-  echo "| 4. Back To Select Menu                                |"
-  echo "| 5. Back To Main Menu                                  |"
-  echo "| 6. Exit                                               |"
+  echo "| 1. Select All from a Table                            |"
+  echo "| 2. Select Specific Column from a Table                |"
+  echo "| 3. Select All Columns Matching a Certain Regex        |"
+  echo "| 4. Select Specific Column Matching a Certain Regex    |"
+  echo "| 5. Back To Select Menu                                |"
+  echo "| 6. Back To Main Menu                                  |"
+  echo "| 7. Exit                                               |"
   echo "|_______________________________________________________|"
   echo	
 
@@ -195,28 +197,32 @@ function selectMenu(){
 
     #check user input
     case $num in 
-      1)
+      1) 
+         #Select All from a Table 
+         select_All
+         ;;
+      2)
          #Select Specific Column from a Table
          select_col
          ;;
-      2)
+      3)
          #Select All Columns Matching a Certain Regex 
          select_all_regex 
          ;;
-      3)
+      4)
          #Select Specific Column Matching a Certain Regex
          select_col_regex
          ;;
-      4)
+      5)
          #Back To Select Menu
          selectMenu
          ;;
-      5)
+      6)
          #Back To Main Menu
          cd ../..
          main_menu_fun
          ;;
-      6)
+      7)
          #Exit
          exit_fun
          ;;   
@@ -227,27 +233,117 @@ function selectMenu(){
   done
 }
 
-#Select Specific Column from a Table
-function select_col(){
-echo "select_col"
-}
-
-#Select All Columns Matching a Certain Regex 
-function select_all_regex(){
-echo "select_all_regex"
-}
-
-#Select Specific Column Matching a Certain Regex
-function select_col_regex(){
-echo "select_col_regex"
-} 
-
+##################################### Sort #################################################
 function sortTable() {
 
 echo "sort"	
 
 }
+######################################## Delete Records #####################################
+function deleteMenu(){
+  echo 
+  echo " _________________ Delete menu _________________________"
+  echo "| 1. Delete All from Table [Truncate table]             |"
+  echo "| 2. Delete records under Condition                     |"
+  echo "| 3. Back To Delete Menu                                |"
+  echo "| 4. Back To Main Menu                                  |"
+  echo "| 5. Exit                                               |"
+  echo "|_______________________________________________________|"
+  echo  
 
+  while true
+  do
+    #user insert choose
+    read -p "Enter your choose number: " num
+
+    #check user input
+    case $num in 
+      1)
+         #Delete All from Table [Truncate table]
+         truncate_table
+         ;;
+      2)
+         #Delete records under Condition 
+         delete_records
+         ;;
+      3)
+         #Back To Delete Menu 
+         deleteMenu
+         ;;
+      4)
+         #Back To Main Menu
+         cd ../..
+         main_menu_fun
+         ;;
+      5)
+         #Exit
+         exit_fun
+         ;;   
+      *) 
+         # not matched
+         matched_fun
+    esac
+  done
+}
+
+function truncate_table(){
+# Ask user to enter the table name  
+  read -p "Please Enter Table Name: " tableName
+  if [[ ! -f $tableName ]]; then
+  echo "Table not existed "
+  deleteMenu
+  fi
+ #truncate table 
+  sed -e -n '1p' $tableName 
+ #check if table truncated successfully or not 
+  if [[ $? == 0 ]]
+  then
+    echo "Table [$tableName] truncated successfully"
+  else
+    echo "Error Truncate Table $tableName"
+  fi
+}
+
+function delete_records(){
+#delete from [tableName] where [fieldName]==[certain_Pattern]
+# Ask user to enter the table name  
+  read -p "Please Enter Table Name: " tableName
+  if [[ ! -f $tableName ]]; then
+  echo "Table not existed "
+  deleteMenu
+  fi
+
+# Ask user to enter the name of required field that deleted its data according to certain regex
+read -p "Please Enter The required Field Name: " fName 
+
+#get the number of field that the user entered his name 
+fNum=$(awk 'BEGIN{FS="|"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$fName'") print i}}}' $tableName)
+
+#check if field already existed in table or not
+if [[ $fNum == "" ]]; then
+  echo "Field Not exist in table"
+  deleteMenu
+else
+
+  #Ask user to enter the regex that he/she wants to search for data according to it
+  read -p "Please Enter The required Regex value: " regexPattern 
+  NR=$(awk 'BEGIN {FS="|"} { if($'$fNum' ~ /'$regexPattern'/) print NR"d;"; }' $tableName)
+
+  if [[ $NR == "" ]]; then
+    echo "Regex Not matched in table"
+    deleteMenu
+  else
+    sed -i -e "${NR}" $tableName
+    if [[ $? == 0 ]]
+      then
+        echo "data deleted successfully"
+      else
+        echo "Error delete data from Table $tableName"
+      fi
+
+  fi 
+fi
+}
 
 
 ##############################################################################################
