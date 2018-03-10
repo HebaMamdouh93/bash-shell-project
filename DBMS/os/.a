@@ -1,4 +1,0 @@
-field name|datatype|key|constraints
-id|int|key|-
-name|string|key|-
-age|int|key|-
