@@ -7,6 +7,7 @@ cd DBMS
 
 table_menu_fun(){
  
+    clear
     echo
     echo " ________ Table menu  ________"
     echo "| 1. Show Tables              |"
@@ -25,60 +26,63 @@ table_menu_fun(){
   
     #user insert choose
     read -p "Enter your choose number: " num1
-  
-    #check user choose
-    while true
-    do
-    	case $num1 in 
-        	1) 
-        		#show tables
-            show_tables
+  #check user choose
+
+  while true
+  do
+    case $num1 in 
+      1) 
+        #show tables
+       show_tables
             back_fun
-        		;;
-        	2)
-        		#create table
-        		create_table_fun
-        		;;
-        	3)
-        		#alter table
-        		alter_table_fun
-        		;;
-       		4)
-        		#sort table
-        		;;
-        	5)
-        		#add record
-            insert_record
-        		;;
-      		6)
-        		#edit records
-            update_menu
-        		;;
-        	7)
-        		#delete records
-        		;;
-      		8)
-        		#select records
-        		;;
-      		9)
-        		#drop table
-            drop_table
-            back_fun
-        		;;
-     		10) 
-        		#back to main menu
-            cd ..
-        		main_menu_fun
-        		;;
-     		11)
-        		#exit
-        		exit_fun
-        		;;
-      		*)
-        		matched_fun
-        		read -p "Enter your choose number: " num1
-    	esac
-  	done
+        ;;
+      2)
+        #create table
+        create_table_fun
+        ;;
+      3)
+        #alter table
+        alter_table_fun
+        ;;
+      4)
+        #sort table
+ 	sortTable
+        ;;
+      5)
+        #add record
+        insert_record
+        ;;
+      6)
+        #edit records
+	update_menu
+        ;;
+      7)
+        #delete records
+	deleteMenu
+        ;;
+      8)
+        #select records
+        selectMenu
+        ;;
+      9)
+        #drop table
+        drop_table
+        back_fun
+        ;;
+     10) 
+        #back to main menu
+        main_menu_fun
+        ;;
+     11)
+        #exit
+        exit_fun
+        ;;
+      *)
+        matched_fun
+        read -p "Enter your choose number: " num1
+    esac
+  done
+
 }
 
 back_fun(){
@@ -743,6 +747,7 @@ create_field_fun(){
               matched_fun
         esac
     done
+
     while true
     do
         check_key=$(grep -c '|key|' .$table_name)
@@ -876,6 +881,7 @@ delete_field_fun(){
 
 ch_datatype_field(){
    
+
    	  clear
     while true
     do
@@ -888,6 +894,7 @@ ch_datatype_field(){
           echo "This table --> $table_name not exist !"
       fi
     done
+
 }
 
 ch_datatype_fun(){
@@ -1070,6 +1077,401 @@ main_menu_fun(){
     esac
   done
 }
+################################## SELECT & SORT #############################################
+#select Part
+function selectMenu(){
+  echo 
+  echo " _________________ Select menu _________________________"
+  echo "| 1. Select All from a Table                            |"
+  echo "| 2. Select Specific Column from a Table                |"
+  echo "| 3. Select All Columns Matching a Certain Regex        |"
+  echo "| 4. Select Specific Column Matching a Certain Regex    |"
+  echo "| 5. Back To Options Menu                                |"
+  echo "| 6. Back To Main Menu                                  |"
+  echo "| 7. Exit                                               |"
+  echo "|_______________________________________________________|"
+  echo	
 
+  while true
+  do
+  	#user insert choose
+    read -p "Enter your choose number: " num
+
+    #check user input
+    case $num in 
+      1) 
+         #Select All from a Table 
+         select_All
+         ;;
+      2)
+         #Select Specific Column from a Table
+         select_col
+         ;;
+      3)
+         #Select All Columns Matching a Certain Regex 
+         select_all_regex 
+         ;;
+      4)
+         #Select Specific Column Matching a Certain Regex
+         select_col_regex
+         ;;
+      5)
+         #Back To options Menu
+         table_menu_fun
+         ;;
+      6)
+         #Back To Main Menu
+         cd ../..
+         main_menu_fun
+         ;;
+      7)
+         #Exit
+         exit_fun
+         ;;   
+      *) 
+         # not matched
+         matched_fun
+    esac
+  done
+}
+
+#Select All from a Table
+function select_All(){
+# Ask user to enter the table name  
+  read -p "Please Enter Table Name: " tableName
+  if [[ ! -f $tableName ]]; then
+  echo "Table not existed "
+  selectMenu
+  fi 
+  
+  awk 'BEGIN {FS="|"} {print $0}' $tableName 
+} 
+
+#Select Specific Column from a Table
+function select_col(){
+
+# Ask user to enter the table name  
+  read -p "Please Enter Table Name: " tableName
+  if [[ ! -f $tableName ]]; then
+  echo "Table not existed "
+  selectMenu
+  fi
+
+  # Ask to enter the number of field that wanted to reterive data from it
+  read -p "Please Enter The Number of Column :" colNum
+
+  awk 'BEGIN {FS="|"} {print $'$colNum'}' $tableName
+
+  selectMenu
+}
+
+#Select All Columns Matching a Certain Regex 
+function select_all_regex(){
+
+clear 
+echo "Select * From [Table] Where [Field] = [Certain regex]"
+
+# Ask user to enter the table name  
+  read -p "Please Enter Table Name: " tableName
+  if [[ ! -f $tableName ]]; then
+  echo "Table not existed "
+  selectMenu
+  fi
+
+# Ask user to enter the name of required field
+read -p "Please Enter The required Field Name: " fieldName
+
+#get the number of field that the user entered his name 
+fieldNum=$(awk 'BEGIN{FS="|"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$fieldName'") print i}}}' $tableName)
+
+#check if field already existed in table or not
+if [[ $fieldNum == "" ]]; then
+  echo "Field Not exist in table"
+  selectMenu
+else
+
+#Ask user to enter the regex that he/she wants to search for data according to it
+read -p "Please Enter The required Regex value: " regexPattern
+
+awk 'BEGIN {FS="|"} { if($'$fieldNum' ~ /'$regexPattern'/) print $0; }' $tableName
+
+#Ask user to print the selected records in html format or csv format 
+echo -e "Enter Type of format choose 1) HTML  or choose 2) CSV : "
+  select fileFormat in "1" "2"
+    do
+      read -p "Please Enter the Name of file:" fName
+      case $fileFormat in
+
+        1 )  
+            awk 'BEGIN {FS="|" ; print"<html><head></head><body>"; } {
+if(NR==1) print "<h4>" $0 "</h4>";  
+if($'$fieldNum' ~ /'$regexPattern'/) print $0  "</br>"; }   
+
+END{print "</body></html>"}
+' $tableName > $fName.html
+selectMenu
+            ;;
+        2 )
+ awk 'BEGIN {FS="|" ; } {
+if(NR==1) {gsub("|",",",$0); print $0} ;  
+if($'$fieldNum' ~ /'$regexPattern'/) {gsub("|",",",$0); print $0} ; }   
+' $tableName  > $fName.csv
+selectMenu
+            ;;
+        * ) echo "Wrong Choice" ;;
+      esac
+    done
+
+selectMenu  
+fi
+
+}
+
+#Select Specific Column Matching a Certain Regex
+function select_col_regex(){
+clear 
+echo "Select [specific field] From [Table] Where [Field] = [Certain regex]"
+
+# Ask user to enter the table name  
+  read -p "Please Enter Table Name: " tableName
+  if [[ ! -f $tableName ]]; then
+  echo "Table not existed "
+  selectMenu
+  fi
+
+# Ask user to enter the name of required field
+read -p "Please Enter The Fields Name that wanted to select data from it: " fieldName
+#split the fields name into array
+IFS=' ' read -r -a array <<< "$fieldName"
+#get the number of each field that the user entered his name  and store them into array
+for element in "${array[@]}"
+do
+fieldNum=$(awk 'BEGIN{FS="|"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$element'") print i}}}' $tableName)
+if [[ $fieldNum == "" ]]; then
+  echo "Field [ $element ] Not exist in table"
+  selectMenu
+else
+  fieldNums+='$'$fieldNum','
+fi
+done
+fieldNums=${fieldNums::-1}
+
+# Ask user to enter the name of required field that searched for data according to certain regex
+read -p "Please Enter The required Field Name to search for data: " fName 
+#get the number of field that the user entered his name 
+fNum=$(awk 'BEGIN{FS="|"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$fName'") print i}}}' $tableName)
+
+#check if field already existed in table or not
+if [[ $fNum == "" ]]; then
+  echo "Field Not exist in table"
+  selectMenu
+else
+
+#Ask user to enter the regex that he/she wants to search for data according to it
+read -p "Please Enter The required Regex value: " regexPattern
+awk 'BEGIN {FS="|";  OFS = "|"} {
+if(NR==1) print '$fieldNums';   
+if($'$fNum' ~ /'$regexPattern'/) {  print '$fieldNums' }; }' $tableName
+
+#Ask user to print the selected records in html format or csv format 
+echo -e "Enter Type of format choose 1) HTML  or choose 2) CSV : "
+  select fileFormat in "1" "2"
+    do
+      read -p "Please Enter the Name of file:" fName
+      case $fileFormat in
+
+        1 )  
+            awk 'BEGIN {FS="|" ; OFS = "|"; print"<html><head></head><body>"; } {
+      if(NR==1) print "<h4>" '$fieldNums' "</h4>";    
+      if($'$fNum' ~ /'$regexPattern'/) {  print '$fieldNums' "</br>" ;} 
+      END{print "</body></html>"}
+      ' $tableName > $fName.html
+      selectMenu
+            ;;
+        2 )
+       awk 'BEGIN {FS="|" ; } {
+      if(NR==1) print '$fieldNums';   
+      if($'$fNum' ~ /'$regexPattern'/) {  print '$fieldNums' }; }   
+      ' $tableName > $fName.csv
+      selectMenu
+                  ;;
+        * ) echo "Wrong Choice" ;;
+      esac
+    done
+
+selectMenu  
+fi
+} 
+
+##################################### Sort #################################################
+function sortTable() {
+
+# Ask user to enter the table name that wanted to sort 
+  read -p "Please Enter Table Name: " tableName
+  if [[ ! -f $tableName ]]; then
+  echo "Table not existed "
+  table_menu_fun
+  fi
+
+# Ask to enter the number of field that wanted to sort table according to it
+read -p "Please Enter The Name of Column: " colName 
+#get the number of field that the user entered his name 
+colNum=$(awk 'BEGIN{FS="|"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$colName'") print i}}}' $tableName)
+
+#check if field already existed in table or not
+if [[ $colNum == "" ]]; then
+  echo "Field Not exist in table"
+  table_menu_fun
+else
+  colSort="-k"$colNum
+  colType=$( awk 'BEGIN{FS="|"}{if(NR=='$colNum') print $2}' .$tableName)
+  echo -e "Enter Type of Sort choose 1) sort ascend​ing or choose 2) sort descending : "
+  select sortType in "1" "2"
+    do
+      head -1 $tableName;
+      case $sortType in
+
+        1 )  
+       
+             if [[ $colType == "int" ]];then
+             
+         sed '1d' $tableName  | sort -n -f -t '|' $colSort ;
+
+      else
+
+         sed '1d' $tableName  | sort -f -t '|' $colSort ;
+      fi  
+      break
+      #table_menu_fun
+            ;;
+        2 ) if [[ $colType == "int" ]];then
+           
+         sed '1d' $tableName  | sort -nr -f -t '|' $colSort ;
+
+      else
+          
+         sed '1d' $tableName  | sort -r -f -t '|' $colSort ;
+      fi  
+      #table_menu_fun
+      break
+            ;;
+        * ) echo "Wrong Choice" ;;
+      esac
+      
+    done
+    table_menu_fun
+fi  
+ 
+
+}
+######################################## Delete Records #####################################
+function deleteMenu(){
+  echo 
+  echo " _________________ Delete menu _________________________"
+  echo "| 1. Delete All from Table [Truncate table]             |"
+  echo "| 2. Delete records under Condition                     |"
+  echo "| 3. Back To Delete Menu                                |"
+  echo "| 4. Back To Main Menu                                  |"
+  echo "| 5. Exit                                               |"
+  echo "|_______________________________________________________|"
+  echo  
+
+  while true
+  do
+    #user insert choose
+    read -p "Enter your choose number: " num
+
+    #check user input
+    case $num in 
+      1)
+         #Delete All from Table [Truncate table]
+         truncate_table
+         ;;
+      2)
+         #Delete records under Condition 
+         delete_records
+         ;;
+      3)
+         #Back To Delete Menu 
+         deleteMenu
+         ;;
+      4)
+         #Back To Main Menu
+         #cd ../..
+         main_menu_fun
+         ;;
+      5)
+         #Exit
+         exit_fun
+         ;;   
+      *) 
+         # not matched
+         matched_fun
+    esac
+  done
+}
+
+function truncate_table(){
+# Ask user to enter the table name  
+  read -p "Please Enter Table Name: " tableName
+  if [[ ! -f $tableName ]]; then
+  echo "Table not existed "
+  deleteMenu
+  fi
+ #truncate table 
+  
+  sed -n '1p' $tableName > temp && mv temp $tableName
+ #check if table truncated successfully or not 
+  if [[ $? == 0 ]]
+  then
+    echo "Table [$tableName] truncated successfully"
+  else
+    echo "Error Truncate Table $tableName"
+  fi
+}
+
+function delete_records(){
+#delete from [tableName] where [fieldName]==[certain_Pattern]
+# Ask user to enter the table name  
+  read -p "Please Enter Table Name: " tableName
+  if [[ ! -f $tableName ]]; then
+  echo "Table not existed "
+  deleteMenu
+  fi
+
+# Ask user to enter the name of required field that deleted its data according to certain regex
+read -p "Please Enter The required Field Name: " fName 
+
+#get the number of field that the user entered his name 
+fNum=$(awk 'BEGIN{FS="|"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$fName'") print i}}}' $tableName)
+
+#check if field already existed in table or not
+if [[ $fNum == "" ]]; then
+  echo "Field Not exist in table"
+  deleteMenu
+else
+
+  #Ask user to enter the regex that he/she wants to search for data according to it
+  read -p "Please Enter The required Regex value: " regexPattern 
+  NR=$(awk 'BEGIN {FS="|"} { if($'$fNum' ~ /'$regexPattern'/) print NR"d;"; }' $tableName)
+
+  if [[ $NR == "" ]]; then
+    echo "Regex Not matched in table"
+    deleteMenu
+  else
+    sed -i -e "${NR}" $tableName
+    if [[ $? == 0 ]]
+      then
+        echo "data deleted successfully"
+      else
+        echo "Error delete data from Table $tableName"
+      fi
+
+  fi 
+fi
+}
+
+
+##############################################################################################
 clear
 main_menu_fun

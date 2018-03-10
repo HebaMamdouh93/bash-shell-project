@@ -1,0 +1,4 @@
+field name|datatype|primary key|constraints
+id|int|key|-
+name|int|-|-
+email|string|-|-
