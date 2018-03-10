@@ -7,7 +7,6 @@ cd DBMS
 
 table_menu_fun(){
  
-    clear
     echo
     echo " ________ Table menu  ________"
     echo "| 1. Show Tables              |"
@@ -33,6 +32,8 @@ table_menu_fun(){
     	case $num1 in 
         	1) 
         		#show tables
+            show_tables
+            back_fun
         		;;
         	2)
         		#create table
@@ -61,6 +62,8 @@ table_menu_fun(){
         		;;
       		9)
         		#drop table
+            drop_table
+            back_fun
         		;;
      		10) 
         		#back to main menu
@@ -78,9 +81,31 @@ table_menu_fun(){
   	done
 }
 
+back_fun(){
+
+  echo
+  echo " ________ Choose ________"
+  echo "| 1. Back to table menu  |"
+  echo "| 2. Exit                |"
+  echo "|________________________|"
+  echo
+  while true
+  do
+    read -p "Enter your choose: " num
+    case $num in
+      1)
+        table_menu_fun
+        ;;
+      2)
+        exit_fun
+        ;;
+      *)
+        matched_fun
+    esac
+  done  
+}
 select_menu_fun(){
   
-  	clear
     read -p "(Select DB) Enter DB name: " name_db
     if [ -e $name_db ] && [ -d $name_db ]
     then
@@ -115,13 +140,11 @@ select_menu_fun(){
 }
 
 create_table_fun(){
-  
-  	clear
 
     column_num=1
     sep="|"
     new_line="\n"
-    meta_data="field name|datatype|primary key|constraints"
+    meta_data=""
     data="" 
     check_key=0
 
@@ -141,7 +164,7 @@ create_table_fun(){
                   read -p "Enter name of field number ($column_num) : " colm_name
                   echo
                   echo " ___ choose data type ___"
-                echo "| 1. Integer             |"
+                  echo "| 1. Integer             |"
                   echo "| 2. String              |"
                   echo "|________________________|"
                   echo
@@ -202,7 +225,7 @@ create_table_fun(){
                                 while true
                                   do  
                                   read -p "Enter default value ($data_type) : " value
-                                  opt_num="default|"$value
+                                  key="default|"$value
                                   if [ $data_type == "int" ]
                           then
                               d=$(($value+0)) 
@@ -216,15 +239,15 @@ create_table_fun(){
                         break 
                                 ;;
                                 2)
-                                opt_num="notnull"
+                                key="notnull"
                                 break
                                 ;;
                             3)
-                                  opt_num="unique"
+                                  key="unique"
                                 break
                                 ;;
                             4)
-                                opt_num="-"
+                                key="-"
                                 break
                                 ;;
                             *)
@@ -242,7 +265,12 @@ create_table_fun(){
                 then
                   opt_num="-"
                 fi  
-                meta_data+=$new_line$colm_name$sep$data_type$sep$key$sep$opt_num 
+                if [ $column_num == 1 ]
+                then
+                  meta_data+=$colm_name$sep$data_type$sep$key 
+                else
+                  meta_data+=$new_line$colm_name$sep$data_type$sep$key    
+                fi  
                 column_num=$(( $column_num+1 ))              
               done
           
@@ -358,7 +386,7 @@ alter_table_fun(){
     done
 }
 function insert_record(){
-   sep="|"
+  sep="|"
   declare -i count=2
   declare -i fs=0
   declare -a fieldArr=()
@@ -381,14 +409,14 @@ function insert_record(){
         fieldArr[$i]=$fieldName
         dataArr[$i]=$dataType
         constrainArr[$i]=$PKey
-     done
+    done
     #check constraints , datatype for each field  
     for((count=1 ;count<=$colsNum;count++));do
        read -p "Enter ${fieldArr[$count]}:(${dataArr[$count]})=" data
        #check constrain for each field [PK - not null - defaultValue - unique ]
             if [[ ${constrainArr[$count]} == "key" ]]; then
               recordss=`awk 'END{print NR}' $tableName`
-                    for (( x = 1; x <= $recordss; x++ )); do
+                    for (( x = 2; x <= $recordss-1; x++ )); do
                       fs=$(awk 'BEGIN{FS="|"}{ if(NR=='$x') print $1}' $tableName)
                        if [[ $data == ""  ]];
                          then
@@ -400,7 +428,7 @@ function insert_record(){
                        if [[ $data ==  $fs ]];
                        then 
                           echo "$fs already exsist , choose another" 
-                          table_menu_fun
+                           table_menu_fun
                        fi
                     done
             elif [[ ${constrainArr[$count]} == "notnull"  ]]; then
@@ -426,40 +454,25 @@ function insert_record(){
                     done
             else echo ""
             fi
-       #check if datatype is integer
-      if [ ${dataArr[$count]}  == "int" ];
-        then 
-        #check if datatype is match integer
-        if [[  $data =~ $intRegex ]];
-            then 
-             #check unique id 
-            if [ ${fieldArr[$count]} == "id" ];
-                then 
-                  records=`awk 'END{print NR}' $tableName`
-                    for (( x = 1; x <= $records; x++ )); do
-                      ids=$(awk 'BEGIN{FS="|"}{ if(NR=='$x') print $1}' $tableName)
-                       if [[  $data == $ids ]];
-                       then 
-                          echo "$ids already exsist , try again" 
-                           table_menu_fun
-                       fi
-                    done
-            fi
-        else
-          # error datatype
-           echo "Datatype must to be Int , try later"
-           table_menu_fun
+         #check if datatype is integer
+        if [ ${dataArr[$count]}  == "int" ];
+          then 
+          #check if datatype is match integer
+          if [[ ! $data =~ $intRegex ]];
+          then 
+             echo "Datatype must to be Int , try later"
+             table_menu_fun
           fi
-     fi
-      
+       fi
 
-       queryIns+="$data $sep"
+       queryIns+="$data$sep"
 
     done
     #store record in table
      echo $queryIns
      echo $queryIns >> $tableName
      echo "Data Inserted Successfully"
+     table_menu_fun
   fi
 }
 function update_record(){
@@ -476,7 +489,7 @@ read -p "Enter Table Name:" tableName
 if [ ! -f $tableName ];
 then
    echo "Error: Table Not exsist"
-   # select_menu_fun
+    table_menu_fun
 else
   colsNum=`awk 'END{print NR}' .$tableName`
     #get the columns Name and data types
@@ -497,6 +510,7 @@ else
     ids=$(awk 'BEGIN{FS="|"}{ if($1=='$rowId') print NR}' $tableName)
     for((count=1 ;count<=$countF;count++));do
       read -p "Enter column Name:" colName
+
     #get the index of field 
       for (( x = 1; x <= $colsNum; x++ )); do
           fieldName=$(awk 'BEGIN{FS="|"}{ if(NR=='$x') print $1}' .$tableName)
@@ -512,7 +526,7 @@ else
         read -p "Enter new value:" newVal
 
         #------------------ check old value valid
-        checkO=$(awk 'BEGIN{FS="|"}{if(NR=='$rowId') print $'$indexF'}' $tableName)
+        checkO=$(awk 'BEGIN{FS="|"}{if($1 =='$rowId') print $'$indexF'}' $tableName)
           # exit 0
       if [ $checkO == $oldVal ]
         then
@@ -524,18 +538,18 @@ else
                         if [[ $newVal == ""  ]];
                            then 
                             echo "Error : field must be not null ,try again"
-                            table_menu_fun
+                            update_menu
                          fi
                          if [  $newVal ==  $fs ];
                          then 
                             echo "$fs already exsist , choose another" 
-                             table_menu_fun
+                             update_menu
                          fi
                       done
               elif [[ ${constrainArr[$indexF]} == "notnull"  ]]; then
                 if [[ $newVal == "" ]];then
                       echo "Error : field must be not null ,try again"
-                      table_menu_fun
+                      update_menu
                   fi
               elif [[ ${constrainArr[$indexF]} == "default" ]]; then
                 defVal=$( awk 'BEGIN{FS="|"}{if(NR=='$indexF') print $4}' .$tableName)
@@ -549,7 +563,7 @@ else
                          if [[ $newVal == $fu ]];
                          then 
                             echo "$fu already exsist , choose another" 
-                             table_menu_fun
+                             update_menu
                          fi
                       done
               else echo ""
@@ -571,7 +585,7 @@ else
            else
             # error datatype
              echo "Datatype must to be Int , try later"
-             exit 0
+             update_menu
             fi
         else
           # store string data
@@ -579,6 +593,7 @@ else
           # awk -F, -v oldV="$oldVal" -v newV="$newVal" '{if(NR==1){gsub(oldV ,newV)}1}' $tableName > xx_tmp && mv xx_tmp $tableName
           sed -i "${ids}s/$oldVal/$newVal/" $tableName
           echo "row Successfully Updated"
+          update_menu
         fi
         else
       echo "old value not valid"
@@ -634,13 +649,15 @@ then
    echo "Error: Table Not exsist"
  else
   rm $tableName
+  rm .$tableName
+  echo "$tableName --> table deleted successfully."
  fi
 
 }
 
 function show_tables(){
   echo "+--------Tables---------+" 
-       ls -lf
+       ls -p | grep -v /
   echo "+-----------------------+" 
 
 }
@@ -666,7 +683,7 @@ add_field_fun(){
           then
             opt_num="-"
           fi  
-          table_metadata=$new_line$colm_name$sep$data_type$sep$key$sep$opt_num
+          table_metadata=$new_line$colm_name$sep$data_type$sep$key
           echo -e $table_metadata >> .$table_name
           echo
           echo "$colm_name --> column added successfully"
@@ -766,7 +783,7 @@ create_field_fun(){
               while true
               do  
                 read -p "Enter default value ($data_type) : " value
-                opt_num="default|"$value
+                key="default|"$value
                 if [ $data_type == "int" ]
                 then
                     d=$(($value+0)) 
@@ -780,15 +797,15 @@ create_field_fun(){
               break
             elif [ $opt_num == 2 ]
             then  
-              opt_num="notnull"
+              key="notnull"
               break
           elif [ $opt_num == 3 ]
           then  
-              opt_num="unique"
+              key="unique"
               break
           elif [ $opt_num == 4 ]
           then  
-              opt_num="-"
+              key="-"
               break 
             else       
               matched_fun
