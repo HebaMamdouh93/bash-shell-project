@@ -43,10 +43,10 @@ table_menu_fun(){
        		4)
         		#sort table
         		;;
-        	5)
+        	5)insert_record
         		#add record
         		;;
-      		6)
+      		6)update_menu
         		#edit records
         		;;
         	7)
@@ -350,7 +350,293 @@ alter_table_fun(){
      	esac
   	done
 }
- 
+function insert_record(){
+   sep="|"
+  declare -i count=2
+  declare -i fs=0
+  declare -a fieldArr=()
+  declare -a dataArr=()
+  declare -a constrainArr=()
+  declare -a idArr=()
+  queryIns=""
+  intRegex='^[0-9]+$'
+  read -p "Insert Table Name:" tableName
+  if [ ! -f $tableName ];
+    then
+      echo "Error: Table Not exsist"
+  else
+    colsNum=`awk 'END{print NR}' .$tableName`
+    #check and store each field
+    for (( i = 1; i <= $colsNum; i++ )); do
+        fieldName=$(awk 'BEGIN{FS="|"}{ if(NR=='$i') print $1}' .$tableName)
+        dataType=$( awk 'BEGIN{FS="|"}{if(NR=='$i') print $2}' .$tableName)
+        PKey=$( awk 'BEGIN{FS="|"}{if(NR=='$i') print $3}' .$tableName)
+        fieldArr[$i]=$fieldName
+        dataArr[$i]=$dataType
+        constrainArr[$i]=$PKey
+     done
+    #check constraints , datatype for each field  
+    for((count=1 ;count<=$colsNum;count++));do
+       read -p "Enter ${fieldArr[$count]}:(${dataArr[$count]})=" data
+       #check constrain for each field [PK - not null - defaultValue - unique ]
+            if [[ ${constrainArr[$count]} == "key" ]]; then
+              recordss=`awk 'END{print NR}' $tableName`
+                    for (( x = 1; x <= $recordss; x++ )); do
+                      fs=$(awk 'BEGIN{FS="|"}{ if(NR=='$x') print $1}' $tableName)
+                       if [[ $data == ""  ]];
+                         then
+                     
+                          echo "Error : field must be not null ,try again"
+                          table_menu_fun
+                       fi
+
+                       if [[ $data ==  $fs ]];
+                       then 
+                          echo "$fs already exsist , choose another" 
+                          table_menu_fun
+                       fi
+                    done
+            elif [[ ${constrainArr[$count]} == "notnull"  ]]; then
+              if [[ $data == "" ]];then
+                    echo "Error : field must be not null ,try again"
+                    table_menu_fun
+                fi
+            elif [[ ${constrainArr[$count]} == "default" ]]; then
+              defVal=$( awk 'BEGIN{FS="|"}{if(NR=='$count') print $4}' .$tableName)
+              if [[  $data == "" ]];then
+                   data=$defVal
+                
+              fi  
+            elif [[ $data == "unique" ]]; then
+                recorda=`awk 'END{print NR}' $tableName`
+                    for (( x = 1; x <= $recorda; x++ )); do
+                      fu=$(awk 'BEGIN{FS="|"}{ if(NR=='$x') print $1}' $tableName)
+                       if [  $data == $fu ];
+                       then 
+                          echo "$fu already exsist , choose another" 
+                           table_menu_fun
+                       fi
+                    done
+            else echo ""
+            fi
+       #check if datatype is integer
+      if [ ${dataArr[$count]}  == "int" ];
+        then 
+        #check if datatype is match integer
+        if [[  $data =~ $intRegex ]];
+            then 
+             #check unique id 
+            if [ ${fieldArr[$count]} == "id" ];
+                then 
+                  records=`awk 'END{print NR}' $tableName`
+                    for (( x = 1; x <= $records; x++ )); do
+                      ids=$(awk 'BEGIN{FS="|"}{ if(NR=='$x') print $1}' $tableName)
+                       if [[  $data == $ids ]];
+                       then 
+                          echo "$ids already exsist , try again" 
+                           table_menu_fun
+                       fi
+                    done
+            fi
+        else
+          # error datatype
+           echo "Datatype must to be Int , try later"
+           table_menu_fun
+          fi
+     fi
+      
+
+       queryIns+="$data $sep"
+
+    done
+    #store record in table
+     echo $queryIns
+     echo $queryIns >> $tableName
+     echo "Data Inserted Successfully"
+  fi
+}
+function update_record(){
+  sep="|"
+intRegex='^[0-9]+$'
+declare -i indexF=0
+declare -i ids=0
+declare -a fieldArr=()
+declare -a dataArr=()
+declare -a idArr=()
+declare -a constrainArr=()
+fields=""
+read -p "Enter Table Name:" tableName  
+if [ ! -f $tableName ];
+then
+   echo "Error: Table Not exsist"
+   # select_menu_fun
+else
+  colsNum=`awk 'END{print NR}' .$tableName`
+    #get the columns Name and data types
+  for (( i = 1; i <= $colsNum; i++ )); do
+      fieldName=$(awk 'BEGIN{FS="|"}{ if(NR=='$i') print $1}' .$tableName)
+      dataType=$( awk 'BEGIN{FS="|"}{if(NR=='$i') print $2}' .$tableName)
+      PKey=$( awk 'BEGIN{FS="|"}{if(NR=='$i') print $3}' .$tableName)
+      fieldArr[$i]=$fieldName
+      dataArr[$i]=$dataType
+      constrainArr[$i]=$PKey
+      fields+="| $fieldName "
+  done 
+  echo  "|------------------------------|"
+    echo  "fields are" $fields
+    echo  "|------------------------------|"
+    read -p "Enter the Number of fields will Be Update:" countF
+    read -p "Enter id of row:" rowId
+    ids=$(awk 'BEGIN{FS="|"}{ if($1=='$rowId') print NR}' $tableName)
+    for((count=1 ;count<=$countF;count++));do
+      read -p "Enter column Name:" colName
+    #get the index of field 
+      for (( x = 1; x <= $colsNum; x++ )); do
+          fieldName=$(awk 'BEGIN{FS="|"}{ if(NR=='$x') print $1}' .$tableName)
+            if [[ ${fieldArr[$x]} =~ $colName ]];
+             then
+              indexF=$x
+            fi
+        done
+        #check if field exsist
+        if [[ $indexF != 0 ]]; 
+        then
+        read -p "Enter old value:" oldVal
+        read -p "Enter new value:" newVal
+
+        #------------------ check old value valid
+        checkO=$(awk 'BEGIN{FS="|"}{if(NR=='$rowId') print $'$indexF'}' $tableName)
+          # exit 0
+      if [ $checkO == $oldVal ]
+        then
+             # check constrain for each field [PK - not null - defaultValue - unique ]
+              if [[ ${constrainArr[$indexF]} == "key" ]]; then
+                recordss=`awk 'END{print NR}' $tableName`
+                      for (( z = 1; z <= $recordss; z++ )); do
+                        fs=$(awk 'BEGIN{FS="|"}{ if(NR=='$z') print $1}' $tableName)
+                        if [[ $newVal == ""  ]];
+                           then 
+                            echo "Error : field must be not null ,try again"
+                            table_menu_fun
+                         fi
+                         if [  $newVal ==  $fs ];
+                         then 
+                            echo "$fs already exsist , choose another" 
+                             table_menu_fun
+                         fi
+                      done
+              elif [[ ${constrainArr[$indexF]} == "notnull"  ]]; then
+                if [[ $newVal == "" ]];then
+                      echo "Error : field must be not null ,try again"
+                      table_menu_fun
+                  fi
+              elif [[ ${constrainArr[$indexF]} == "default" ]]; then
+                defVal=$( awk 'BEGIN{FS="|"}{if(NR=='$indexF') print $4}' .$tableName)
+                if [[ $newVal == "" ]];then
+                     newVal=$defVal
+                fi  
+              elif [[ ${constrainArr[$indexF]}  == "unique" ]]; then
+                  recorda=`awk 'END{print NR}' $tableName`
+                      for (( x = 1; x <= $recorda; x++ )); do
+                        fu=$(awk 'BEGIN{FS="|"}{ if(NR=='$x') print $1}' $tableName)
+                         if [[ $newVal == $fu ]];
+                         then 
+                            echo "$fu already exsist , choose another" 
+                             table_menu_fun
+                         fi
+                      done
+              else echo ""
+              fi
+
+        #get datatype of field 
+          #check if datatype is integer
+        if [ ${dataArr[$indexF]}  == "int" ]; 
+          then 
+          #check if datatype is match integer
+             if [[  $newVal =~ $intRegex ]];
+           then 
+             #update int here
+               #------------------ check constraints here
+
+              sed -i "${ids}s/$oldVal/$newVal/" $tableName
+              # awk -F, -v oldV="$oldVal" -v newV="$newVal" '{if(NR==1){gsub(oldV ,newV)}1}' $tableName > xx_tmp && mv xx_tmp $tableName
+              echo "row Successfully Updated"
+           else
+            # error datatype
+             echo "Datatype must to be Int , try later"
+             exit 0
+            fi
+        else
+          # store string data
+          # awk -F, -v oldV="$oldVal" -v newV="$newVal" '{gsub(oldV ,newV)}1' $tableName > xx_tmp && mv xx_tmp $tableName
+          # awk -F, -v oldV="$oldVal" -v newV="$newVal" '{if(NR==1){gsub(oldV ,newV)}1}' $tableName > xx_tmp && mv xx_tmp $tableName
+          sed -i "${ids}s/$oldVal/$newVal/" $tableName
+          echo "row Successfully Updated"
+        fi
+        else
+      echo "old value not valid"
+      fi
+   else
+     echo "Field Not exsist"
+    fi
+done 
+fi
+}
+update_menu(){
+  echo " _______________ Update menu ________________"
+  echo "| 1. Update Fields With Certain Value        |"
+  echo "| 2. Update Fields with Regex                |" 
+  echo "| 3. Back To Table Menu                      |"
+  echo "| 4. Back To Main Menu                       |"
+  echo "| 5. Exit                                    |"
+  echo "|____________________________________________|"
+
+  read -p "Enter your choose number: " num3
+  case $num3 in
+   1)update_record
+       ;;
+   2)update_regex
+      ;; 
+   3)table_menu_fun
+      ;;
+   4)main_menu_fun
+      ;;
+   5)exit_fun
+      ;;
+   *)
+     matched_fun
+  esac
+
+}
+update_regex(){
+read -p "Enter Table Name:" tableName  
+if [ ! -f $tableName ];
+then
+   echo "Error: Table Not exsist"
+   table_menu_fun
+else
+  read -p "Enter regex update:" regexUp
+  read -p "Enter New Value To Update:" newv
+  sed  -i "s/$regexUp/$newv/g" $tableName
+fi
+}
+function drop_table(){
+read -p "Enter table Name : " tableName
+if [ ! -f $tableName ];
+then
+   echo "Error: Table Not exsist"
+ else
+  rm $tableName
+ fi
+
+}
+
+function show_tables(){
+  echo "+--------Tables---------+" 
+       ls -lf
+  echo "+-----------------------+" 
+
+}
 add_field_fun(){
   
     sep="|"
