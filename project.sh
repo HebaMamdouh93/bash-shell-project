@@ -132,31 +132,45 @@ back_create_table(){
   done
 }
 
-data_type_fun(){
 
-  read -p "Enter name of field number ($column_num) : " colm_name
-  echo
-  echo " ___ choose data type ___"
-  echo "| 1. Integer             |"
-  echo "| 2. String              |"
-  echo "|________________________|"
-  echo
+
+data_type_fun(){
+  
   while true
   do
-    read -p "Enter data type of ($colm_name) column: " data_type
-    case $data_type in
-      1)
-        data_type="int"
-        break
-        ;;
-      2)
-        data_type="string"
-        break
-        ;;
-      *)
-        matched_fun
-    esac
-  done
+    read -p "Enter name of field number ($column_num) : " colm_name
+    check_field_name=$(echo $meta_data | sed -n "/$colm_name|/p")
+    if [ ! $check_field_name ]
+    then  
+      echo
+      echo " ___ choose data type ___"
+      echo "| 1. Integer             |"
+      echo "| 2. String              |"
+      echo "|________________________|"
+      echo
+      while true
+      do
+        read -p "Enter data type of ($colm_name) column: " data_type
+        case $data_type in
+          1)
+            data_type="int"
+            break
+            ;;
+          2)
+            data_type="string"
+            break
+            ;;
+          *)
+            matched_fun
+        esac
+      done
+      break
+    else
+      echo
+      echo "There is a field with this name"
+      echo
+    fi
+  done    
 }
 
 select_menu_fun(){
@@ -764,7 +778,40 @@ menu_fun(){
 create_field_fun(){
 
   value=""
-  data_type_fun
+  while true
+  do
+    read -p "(Create field) Enter name of field: " colm_name
+    check_field_name=$(sed -n "/^$colm_name|/p" .$table_name)
+    if [ ! $check_field_name ]
+    then 
+      echo
+      echo " ___ choose data type ___"
+      echo "| 1. Integer             |"
+      echo "| 2. String              |"
+      echo "|________________________|"
+      echo
+      while true
+      do
+        read -p "Enter data type of ($colm_name) column: " data_type
+        if [ $data_type == 1 ]
+        then  
+          data_type="int"
+          break
+        elif [ $data_type == 2 ]
+        then
+          data_type="string"
+          break
+        else
+          matched_fun
+        fi
+      done
+      break
+    else
+      echo
+      echo "There is a field with this name"
+      echo
+    fi  
+  done  
   while true
   do
     check_key=$(grep -c '|key' .$table_name)
