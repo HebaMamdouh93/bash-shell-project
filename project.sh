@@ -1085,7 +1085,54 @@ function select_All(){
   selectMenu
   fi 
   
-  awk 'BEGIN {FS="|"} {print $0}' $tableName 
+  printed_data=$(awk 'BEGIN {FS="|"} {print $0}' $tableName)
+echo $printed_data | tr ' ' '\n'
+#Ask user to print the selected records in html format or csv format 
+echo -e "Enter Type of format choose 1) HTML  or choose 2) CSV : "
+read -p "Please Enter the Name of file:" fName
+  select fileFormat in "1" "2"
+    do
+      
+      case $fileFormat in
+
+        1 )  awk 'BEGIN{FS="|" ; print"<html><head><style>h1{text-align:center;} span{color:red;font-size:20px;font-weight:bold;} label{font-size:20px}</style></head><body> <h1>'$tableName'</h1>";}
+                  {
+                  if(NR==1)
+                    {
+                      for(i=1;i<=NF;i++){ split($0,header,"|") }
+                    }
+                  else{
+                    for(i=1;i<=NF;i++){
+          
+                   print "<span>" header[i] "</span> : <label>" $i  "</label></br>"
+                  }
+                   print "<hr>"
+                }
+                }
+                END{print "</body></html>"
+              }' $tableName > $fName.html
+              echo "File saved successfully"
+           read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                xdg-open "$fName.html"
+            fi
+
+              selectMenu
+            ;;
+        2 )
+            echo "$printed_data"  | tr '|' ',' > $fName.csv
+            echo "File saved successfully"
+            read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                libreoffice "$fName.csv"
+            fi
+            
+            
+            selectMenu
+            ;; 
+        * ) echo "Wrong Choice" ;;
+      esac
+    done
 } 
 
 #Select Specific Column from a Table
@@ -1098,12 +1145,66 @@ function select_col(){
   selectMenu
   fi
 
-  # Ask to enter the number of field that wanted to reterive data from it
-  read -p "Please Enter The Number of Column :" colNum
+  # Ask user to enter the name of required field
+read -p "Please Enter The required Field Name: " fieldName
 
-  awk 'BEGIN {FS="|"} {print $'$colNum'}' $tableName
+#get the number of field that the user entered his name 
+colNum=$(awk 'BEGIN{FS="|"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$fieldName'") print i}}}' $tableName)
+
+#check if field already existed in table or not
+if [[ $colNum == "" ]]; then
+  echo "Field Not exist in table"
+  selectMenu
+else
+
+  printed_data=$(awk 'BEGIN {FS="|"} {print $'$colNum'}' $tableName)
+echo $printed_data | tr ' ' '\n'
+#Ask user to print the selected records in html format or csv format 
+echo -e "Enter Type of format choose 1) HTML  or choose 2) CSV : "
+read -p "Please Enter the Name of file:" fName
+  select fileFormat in "1" "2"
+    do
+      
+      case $fileFormat in
+
+        1 )  awk 'BEGIN{FS="|" ; print"<html><head><style> table {margin:0 auto;} h1{text-align:center;} span{color:red;font-size:30px;font-weight:bold;} label{font-size:20px}</style></head><body> <h1>'$tableName'</h1> <table border=1>";}
+                  {
+                  if(NR==1)
+                    {
+                      print "<tr><td><span>" $'$colNum' "</span></td></tr></br>"
+                    }
+                  else{
+                   
+          
+                   print "<tr><td><label>"  $'$colNum'  "</label></td></tr></br>"
+                  
+                  
+                }
+                }
+                END{print "</table></body></html>"
+              }' $tableName > $fName.html
+           echo "File saved successfully"
+           read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                xdg-open "$fName.html"
+            fi
+              selectMenu
+            ;;
+        2 )
+echo "$printed_data"  | tr '|' ',' > $fName.csv
+echo "File saved successfully"
+read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                libreoffice "$fName.csv"
+            fi
+selectMenu
+            ;;
+        * ) echo "Wrong Choice" ;;
+      esac
+    done
 
   selectMenu
+fi
 }
 
 #Select All Columns Matching a Certain Regex 
@@ -1134,29 +1235,49 @@ else
 #Ask user to enter the regex that he/she wants to search for data according to it
 read -p "Please Enter The required Regex value: " regexPattern
 
-awk 'BEGIN {FS="|"} { if($'$fieldNum' ~ /'$regexPattern'/) print $0; }' $tableName
-
+printed_data=$(awk 'BEGIN {FS="|" ; } {
+if(NR==1) { print $0} ;  
+if($'$fieldNum' ~ /'$regexPattern'/) {print $0} ; }   
+' $tableName)
+echo $printed_data | tr ' ' '\n'
 #Ask user to print the selected records in html format or csv format 
 echo -e "Enter Type of format choose 1) HTML  or choose 2) CSV : "
+read -p "Please Enter the Name of file:" fName
   select fileFormat in "1" "2"
     do
-      read -p "Please Enter the Name of file:" fName
+      
       case $fileFormat in
 
-        1 )  
-            awk 'BEGIN {FS="|" ; print"<html><head></head><body>"; } {
-if(NR==1) print "<h4>" $0 "</h4>";  
-if($'$fieldNum' ~ /'$regexPattern'/) print $0  "</br>"; }   
-
-END{print "</body></html>"}
-' $tableName > $fName.html
-selectMenu
+        1 )  awk 'BEGIN{FS="|" ; print"<html><head><style>h1{text-align:center;} span{color:red;font-size:20px;font-weight:bold;} label{font-size:20px}</style></head><body> <h1>'$tableName'</h1>";}
+                  {
+                  if(NR==1)
+                    {
+                      for(i=1;i<=NF;i++){ split($0,header,"|") }
+                    }
+                  else{
+                    for(i=1;i<=NF;i++){
+          
+                  if($'$fieldNum' ~ /'$regexPattern'/) print "<span>" header[i] "</span> : <label>" $i  "</label></br>"
+                  }
+                  if($'$fieldNum' ~ /'$regexPattern'/) print "<hr>"
+                }
+                }
+                END{print "</body></html>"
+              }' $tableName > $fName.html
+           echo "File saved successfully"
+           read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                xdg-open "$fName.html"
+            fi
+              selectMenu
             ;;
         2 )
- awk 'BEGIN {FS="|" ; } {
-if(NR==1) {gsub("|",",",$0); print $0} ;  
-if($'$fieldNum' ~ /'$regexPattern'/) {gsub("|",",",$0); print $0} ; }   
-' $tableName  > $fName.csv
+echo "$printed_data"  | tr '|' ',' > $fName.csv
+echo "File saved successfully"
+read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                libreoffice "$fName.csv"
+            fi
 selectMenu
             ;;
         * ) echo "Wrong Choice" ;;
@@ -1210,31 +1331,57 @@ else
 
 #Ask user to enter the regex that he/she wants to search for data according to it
 read -p "Please Enter The required Regex value: " regexPattern
-awk 'BEGIN {FS="|";  OFS = "|"} {
+printed_data=$(awk 'BEGIN {FS="|";  OFS = "|"} {
 if(NR==1) print '$fieldNums';   
-if($'$fNum' ~ /'$regexPattern'/) {  print '$fieldNums' }; }' $tableName
+if($'$fNum' ~ /'$regexPattern'/) {  print '$fieldNums' }; }' $tableName)
+
+echo $printed_data | tr ' ' '\n'  
 
 #Ask user to print the selected records in html format or csv format 
 echo -e "Enter Type of format choose 1) HTML  or choose 2) CSV : "
+read -p "Please Enter the Name of file:" fName
   select fileFormat in "1" "2"
     do
-      read -p "Please Enter the Name of file:" fName
+      
       case $fileFormat in
 
-        1 )  
-            awk 'BEGIN {FS="|" ; OFS = "|"; print"<html><head></head><body>"; } {
-      if(NR==1) print "<h4>" '$fieldNums' "</h4>";    
-      if($'$fNum' ~ /'$regexPattern'/) {  print '$fieldNums' "</br>" ;} 
-      END{print "</body></html>"}
-      ' $tableName > $fName.html
+      1 )  
+      awk -v var="$fieldName" 'BEGIN{FS="|" ; print"<html><head><style>h1{text-align:center;} span{color:red;font-size:20px;font-weight:bold;} label{font-size:20px}</style></head><body><h1>'$tableName'</h1>";}
+                  {
+                    
+                  if(NR!=1)
+                    {
+                       
+                       split("'$fieldNums'",fNums,",")
+                       split(var,header," ")
+
+                    for(i in fNums){
+                     
+                  if($'$fNum' ~ /'$regexPattern'/) print "<span>" header[i] "</span> : <label>" $i "</label></br>"
+                
+                  
+                  }
+                  if($'$fNum' ~ /'$regexPattern'/) print "<hr>"
+                
+                }}
+                END{print "</body></html>"
+            
+              }' $tableName > $fName.html
+              echo "File saved successfully"
+           read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                xdg-open "$fName.html"
+            fi
       selectMenu
             ;;
-        2 )
-       awk 'BEGIN {FS="|" ; } {
-      if(NR==1) print '$fieldNums';   
-      if($'$fNum' ~ /'$regexPattern'/) {  print '$fieldNums' }; }   
-      ' $tableName > $fName.csv
-      selectMenu
+      2 )
+      echo "$printed_data" | tr '|' ',' > $fName.csv
+      echo "File saved successfully"
+read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                libreoffice "$fName.csv"
+            fi
+        selectMenu
                   ;;
         * ) echo "Wrong Choice" ;;
       esac
