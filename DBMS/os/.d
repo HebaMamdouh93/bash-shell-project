@@ -1,3 +1,3 @@
 id|int|key|
-name|string |notnull|
+name| string |notnull|
 age|int|default|10
