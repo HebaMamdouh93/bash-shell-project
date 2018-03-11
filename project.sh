@@ -386,6 +386,7 @@ function insert_record(){
   declare -a idArr=()
   queryIns=""
   intRegex='^[0-9]+$'
+  strRegex='^[a-zA-Z]+$'
   read -p "Insert Table Name:" tableName
   if [ ! -f $tableName ];
     then
@@ -446,12 +447,19 @@ function insert_record(){
             else echo ""
             fi
          #check if datatype is integer
-        if [ ${dataArr[$count]}  == "int" ];
+       if [ ${dataArr[$count]}  == "int" ];
           then 
           #check if datatype is match integer
           if [[ ! $data =~ $intRegex ]];
           then 
              echo "Datatype must to be Int , try later"
+             table_menu_fun
+          fi
+          #check if datatype match string
+        elif [ ${dataArr[$count]}  == "string" ]; then
+          if [[ ! $data =~ $strRegex ]];
+          then 
+             echo "Datatype Accept String  only , try later"
              table_menu_fun
           fi
        fi
@@ -468,6 +476,7 @@ function insert_record(){
 function update_record(){
   sep="|"
 intRegex='^[0-9]+$'
+strRegex='^[a-zA-Z]+$'
 declare -i indexF=0
 declare -i ids=0
 declare -a fieldArr=()
@@ -495,12 +504,11 @@ else
   echo  "|------------------------------|"
     echo  "fields are" $fields
     echo  "|------------------------------|"
-    read -p "Enter the Number of fields will Be Update:" countF
+    # read -p "Enter the Number of fields will Be Update:" countF
     read -p "Enter id of row:" rowId
     ids=$(awk 'BEGIN{FS="|"}{ if($1=='$rowId') print NR}' $tableName)
-    for((count=1 ;count<=$countF;count++));do
+    # for((count=1 ;count<=$countF;count++));do
       read -p "Enter column Name:" colName
-
     #get the index of field 
       for (( x = 1; x <= $colsNum; x++ )); do
           fieldName=$(awk 'BEGIN{FS="|"}{ if(NR=='$x') print $1}' .$tableName)
@@ -564,26 +572,25 @@ else
         if [ ${dataArr[$indexF]}  == "int" ]; 
           then 
           #check if datatype is match integer
-             if [[  $newVal =~ $intRegex ]];
+             if [[ ! $newVal =~ $intRegex ]];
            then 
-             #update int here
-               #------------------ check constraints here
-
-              sed -i "${ids}s/$oldVal/$newVal/" $tableName
-              # awk -F, -v oldV="$oldVal" -v newV="$newVal" '{if(NR==1){gsub(oldV ,newV)}1}' $tableName > xx_tmp && mv xx_tmp $tableName
-              echo "row Successfully Updated"
-           else
-            # error datatype
              echo "Datatype must to be Int , try later"
              update_menu
-            fi
-        else
-          # store string data
-          # awk -F, -v oldV="$oldVal" -v newV="$newVal" '{gsub(oldV ,newV)}1' $tableName > xx_tmp && mv xx_tmp $tableName
-          # awk -F, -v oldV="$oldVal" -v newV="$newVal" '{if(NR==1){gsub(oldV ,newV)}1}' $tableName > xx_tmp && mv xx_tmp $tableName
-          sed -i "${ids}s/$oldVal/$newVal/" $tableName
+          else
+            sed -i "${ids}s/$oldVal/$newVal/" $tableName
+                  echo "row Successfully Updated"
+                  update_menu
+             fi
+      elif [  ${dataArr[$indexF]}   == "string" ]; then
+            if [[ ! $newVal =~ $strRegex ]];
+            then 
+               echo "Datatype Accept String  only , try later"
+               update_menu
+            else
+              sed -i "${ids}s/$oldVal/$newVal/" $tableName
           echo "row Successfully Updated"
           update_menu
+            fi
         fi
         else
       echo "old value not valid"
@@ -591,7 +598,7 @@ else
    else
      echo "Field Not exsist"
     fi
-done 
+# done 
 fi
 }
 update_menu(){
@@ -618,6 +625,7 @@ update_menu(){
    *)
      matched_fun
   esac
+
 }
 update_regex(){
 read -p "Enter Table Name:" tableName  
@@ -629,7 +637,7 @@ else
   read -p "Enter regex update:" regexUp
   read -p "Enter New Value To Update:" newv
   sed  -i "s/$regexUp/$newv/g" $tableName
-  echo "Regex Matching Updated Successfully"
+  echo "Regex Match Updated Successfully"
 fi
 }
 function drop_table(){
