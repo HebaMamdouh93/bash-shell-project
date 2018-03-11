@@ -3,29 +3,27 @@
 # DBMS 
 mkdir DBMS
 
-cd DBMS
-
 table_menu_fun(){
  
-    clear
-    echo
-    echo " ________ Table menu  ________"
-    echo "| 1. Show Tables              |"
-    echo "| 2. Create table             |"
-    echo "| 3. Alter table              |"
-    echo "| 4. Sort table               |"
-    echo "| 5. Add record               |"
-    echo "| 6. Edit records             |"
-    echo "| 7. Delete records           |"
-    echo "| 8. Select records           |"
-    echo "| 9. Drop table               |"
-    echo "| 10. Back to main menu       |"
-    echo "| 11. Exit                    |"
-    echo "|_____________________________|"
-    echo
+  clear
+  echo
+  echo " ________ Table menu  ________"
+  echo "| 1. Show Tables              |"
+  echo "| 2. Create table             |"
+  echo "| 3. Alter table              |"
+  echo "| 4. Sort table               |"
+  echo "| 5. Add record               |"
+  echo "| 6. Edit records             |"
+  echo "| 7. Delete records           |"
+  echo "| 8. Select records           |"
+  echo "| 9. Drop table               |"
+  echo "| 10. Back to main menu       |"
+  echo "| 11. Exit                    |"
+  echo "|_____________________________|"
+  echo
   
-    #user insert choose
-    read -p "Enter your choose number: " num1
+  #user insert choose
+  read -p "Enter your choose number: " num1
   #check user choose
 
   while true
@@ -33,8 +31,8 @@ table_menu_fun(){
     case $num1 in 
       1) 
         #show tables
-       show_tables
-            back_fun
+        show_tables
+        back_fun
         ;;
       2)
         #create table
@@ -46,7 +44,7 @@ table_menu_fun(){
         ;;
       4)
         #sort table
- 	sortTable
+ 	      sortTable
         ;;
       5)
         #add record
@@ -54,11 +52,11 @@ table_menu_fun(){
         ;;
       6)
         #edit records
-	update_menu
+	      update_menu
         ;;
       7)
         #delete records
-	deleteMenu
+	      deleteMenu
         ;;
       8)
         #select records
@@ -69,11 +67,12 @@ table_menu_fun(){
         drop_table
         back_fun
         ;;
-     10) 
+      10) 
         #back to main menu
+        cd ../..
         main_menu_fun
         ;;
-     11)
+      11)
         #exit
         exit_fun
         ;;
@@ -82,7 +81,6 @@ table_menu_fun(){
         read -p "Enter your choose number: " num1
     esac
   done
-
 }
 
 back_fun(){
@@ -108,286 +106,276 @@ back_fun(){
     esac
   done  
 }
+
+back_create_table(){
+
+  echo
+  echo " _________ Menu _________"
+  echo "| 1. Create table        |"
+  echo "| 2. Back to table menu  |"
+  echo "|________________________|"
+  echo
+  read -p "Enter your choose: " num
+  while true
+  do
+    case $num in
+      1)
+        create_table_fun
+        ;;
+      2)
+        table_menu_fun
+        ;;
+      *)
+        matched_fun
+        read -p "Enter your choose: " num  
+    esac
+  done
+}
+
+data_type_fun(){
+
+  read -p "Enter name of field number ($column_num) : " colm_name
+  echo
+  echo " ___ choose data type ___"
+  echo "| 1. Integer             |"
+  echo "| 2. String              |"
+  echo "|________________________|"
+  echo
+  while true
+  do
+    read -p "Enter data type of ($colm_name) column: " data_type
+    case $data_type in
+      1)
+        data_type="int"
+        break
+        ;;
+      2)
+        data_type="string"
+        break
+        ;;
+      *)
+        matched_fun
+    esac
+  done
+}
+
 select_menu_fun(){
   
-    read -p "(Select DB) Enter DB name: " name_db
-    if [ -e $name_db ] && [ -d $name_db ]
-    then
-      cd $name_db
-      table_menu_fun
-    else
-      echo "$name_db --> DB not exist !"
-      echo 
-      echo " ________ Menu ________"
-      echo "| 1. Select DB         |"
-      echo "| 2. Back to main menu |"
-      echo "|______________________|"
-      echo 
-      read -p "Enter your choose: " sel
-      while true
-      do
-          case $sel in
-            1)
-                    #select DB
-                select_menu_fun
-                ;;
-            2)
-                    cd ..
-                main_menu_fun
-                ;;
-            *)
-                matched_fun
-                read -p "Enter your choose: " sel
-          esac    
-      done
-    fi
+  read -p "(Select DB) Enter DB name: " name_db
+  if [ -e DBMS/$name_db ] && [ -d DBMS/$name_db ]
+  then
+    cd DBMS/$name_db
+    table_menu_fun
+  else
+    echo "$name_db --> DB not exist !"
+    echo 
+    echo " ________ Menu ________"
+    echo "| 1. Select DB         |"
+    echo "| 2. Back to main menu |"
+    echo "|______________________|"
+    echo 
+    read -p "Enter your choose: " sel
+    while true
+    do
+      case $sel in
+        1)
+          #select DB
+          select_menu_fun
+          ;;
+        2)
+          main_menu_fun
+          ;;
+        *)
+          matched_fun
+          read -p "Enter your choose: " sel
+      esac    
+    done
+  fi
 }
 
 create_table_fun(){
 
-    column_num=1
-    sep="|"
-    new_line="\n"
-    meta_data=""
-    data="" 
-    check_key=0
+  column_num=1
+  sep="|"
+  new_line="\n"
+  meta_data=""
+  data="" 
+  check_key=0
 
-    read -p "(Create table) Enter table name: " table_name
-    ###############    checktable exist or not   ###################
-    if [ ! -f $table_name ]
-    then
-      read -p "Enter number of columns: " cols_num
-      while true
-      do
-          #################   check number of columns   ###############
-          if [ $cols_num -gt 0 ]
+  read -p "(Create table) Enter table name: " table_name
+  ###############    checktable exist or not   ###################
+  if [ ! -f $table_name ]
+  then
+    read -p "Enter number of columns: " cols_num
+    while true
+    do
+      #################   check number of columns   ###############
+      if [ $cols_num -gt 0 ]
+      then
+        ##############   find data of each column  ############
+        while [ $column_num -le $cols_num ]
+        do
+          data_type_fun
+          while true
+          do
+            if [ $check_key == 0 ]
+            then
+              read -p "Is this field ($colm_name) primary key? (y/n) : " key
+              case $key in
+                y)
+                  key="key"
+                  check_key=1
+                  break
+                  ;;
+                n)
+                  key="-"
+                  break
+                  ;;
+                *)
+                  matched_fun
+              esac 
+            else
+              key="-"
+              break
+            fi 
+          done
+          if [ $key == "-" ]
           then
-              ##############   find data of each column  ############
-              while [ $column_num -le $cols_num ]
-              do
-                  read -p "Enter name of field number ($column_num) : " colm_name
-                  echo
-                  echo " ___ choose data type ___"
-                  echo "| 1. Integer             |"
-                  echo "| 2. String              |"
-                  echo "|________________________|"
-                  echo
+            echo 
+            echo " ____ Options on field ____"   
+            echo "| 1. Have default value    |"
+            echo "| 2. Not empty             |" 
+            echo "| 3. uniqueness field      |"
+            echo "| 4. No options            |"
+            echo "|__________________________|" 
+            echo
+            while true
+            do
+              read -p "Enter your choose: " opt_num
+              case $opt_num in
+                1)
                   while true
-                  do
-                    read -p "Enter data type of ($colm_name) column: " data_type
-                    case $data_type in
-                        1)
-                          data_type="int"
-                          break
-                          ;;
-                        2)
-                          data_type="string"
-                          break
-                          ;;
-                        *)
-                          matched_fun
-                    esac
-                  done
-                  while true
-                  do
-                    if [ $check_key == 0 ]
+                  do  
+                    read -p "Enter default value ($data_type) : " value
+                    key="default|"$value
+                    if [ $data_type == "int" ]
                     then
-                        read -p "Is this field ($colm_name) primary key? (y/n) : " key
-                        case $key in
-                          y)
-                              key="key"
-                              check_key=1
-                              break
-                              ;;
-                          n)
-                              key="-"
-                              break
-                              ;;
-                          *)
-                              matched_fun
-                        esac 
-                    else
-                        key="-"
-                        break
-                    fi 
-                done
-                if [ $key == "-" ]
-                then
-                    echo 
-                    echo " ____ Options on field ____"   
-                    echo "| 1. Have default value    |"
-                    echo "| 2. Not empty             |" 
-                    echo "| 3. uniqueness field      |"
-                    echo "| 4. No options            |"
-                    echo "|__________________________|" 
-                    echo
-                    while true
-                    do
-                        read -p "Enter your choose: " opt_num
-                        case $opt_num in
-                            1)
-                                while true
-                                  do  
-                                  read -p "Enter default value ($data_type) : " value
-                                  key="default|"$value
-                                  if [ $data_type == "int" ]
-                          then
-                              d=$(($value+0)) 
-                            if [ $d == 0 ]
-                            then
-                              continue
-                            fi  
-                            fi
-                          break
-                        done     
-                        break 
-                                ;;
-                                2)
-                                key="notnull"
-                                break
-                                ;;
-                            3)
-                                  key="unique"
-                                break
-                                ;;
-                            4)
-                                key="-"
-                                break
-                                ;;
-                            *)
-                                matched_fun
-                        esac
-                    done
-                fi    
-                if [ $column_num == $cols_num ]
-                then
-                    data+=$colm_name
-                else
-                    data+=$colm_name$sep
-                fi
-                if [ $key == "key" ]
-                then
-                  opt_num="-"
-                fi  
-                if [ $column_num == 1 ]
-                then
-                  meta_data+=$colm_name$sep$data_type$sep$key 
-                else
-                  meta_data+=$new_line$colm_name$sep$data_type$sep$key    
-                fi  
-                column_num=$(( $column_num+1 ))              
-              done
-          
-              #################   create table  ###############
-              touch $table_name
-              echo -e $data >> $table_name
-              touch .$table_name
-              echo -e $meta_data >> .$table_name
-              if [ -f $table_name ] && [ -f .$table_name ]
-              then
-                  echo "$table_name --> Table created successfully"
-              else
-                  echo "$table_name --> Table can't created !"
-              fi
-              echo
-              echo " ________ Choose ________"
-              echo "| 1. Back to table menu  |"
-              echo "| 2. Exit                |"
-              echo "|________________________|"
-              echo
-              while true
-              do
-                read -p "Enter your choose: " num
-                case $num in
-                    1)
-                        table_menu_fun
-                        ;;
-                    2)
-                        exit_fun
-                        ;;
-                    *)
-                        matched_fun
-                esac
-              done
+                      d=$(($value+0)) 
+                      if [ $d == 0 ]
+                      then
+                        continue
+                      fi  
+                    fi
+                    break
+                  done     
+                  break 
+                  ;;
+                2)
+                  key="notnull"
+                  break
+                  ;;
+                3)
+                  key="unique"
+                  break
+                  ;;
+                4)
+                  key="-"
+                  break
+                  ;;
+                *)
+                  matched_fun
+              esac
+            done
+          fi    
+          if [ $column_num == $cols_num ]
+          then
+            data+=$colm_name
           else
-              echo "You can't creat table with columns number equal to $cols_num "
-              read -p "Enter number of columns: " cols_num
+            data+=$colm_name$sep
           fi
+          if [ $key == "key" ]
+          then
+            opt_num="-"
+          fi  
+          if [ $column_num == 1 ]
+          then
+            meta_data+=$colm_name$sep$data_type$sep$key 
+          else
+            meta_data+=$new_line$colm_name$sep$data_type$sep$key    
+          fi  
+            column_num=$(( $column_num+1 ))              
+          done
+          #################   create table  ###############
+          touch $table_name
+          echo -e $data >> $table_name
+          touch .$table_name
+          echo -e $meta_data >> .$table_name
+          if [ -f $table_name ] && [ -f .$table_name ]
+          then
+            echo "$table_name --> Table created successfully"
+          else
+            echo "$table_name --> Table can't created !"
+          fi
+          back_fun
+        else
+          echo "You can't creat table with columns number equal to $cols_num "
+          read -p "Enter number of columns: " cols_num
+        fi
       done
     else
       echo "$table_name --> table already exist !"
-      echo
-      echo " _________ Menu _________"
-      echo "| 1. Create table        |"
-      echo "| 2. Back to table menu  |"
-      echo "|________________________|"
-      echo
-      read -p "Enter your choose: " num
-      while true
-      do
-        case $num in
-            1)
-              create_table_fun
-                ;;
-            2)
-                table_menu_fun
-                ;;
-            *)
-              matched_fun
-                  read -p "Enter your choose: " num  
-          esac
-      done
+      back_create_table
     fi
 }
 
 alter_table_fun(){
 
-  	clear
+  clear
 
-    echo 
-    echo " _________ Alter menu _________"
-    echo "| 1. Add field                 |"
-    echo "| 2. Delete field              |"
-    echo "| 3. Change datatype of field  |"
-    echo "| 4. Change table name         |"
-    echo "| 5. Back to table menu        |"
-    echo "| 6. Exit                      |"
-    echo "|______________________________|"
-    echo 
+  echo 
+  echo " _________ Alter menu _________"
+  echo "| 1. Add field                 |"
+  echo "| 2. Delete field              |"
+  echo "| 3. Change datatype of field  |"
+  echo "| 4. Change table name         |"
+  echo "| 5. Back to table menu        |"
+  echo "| 6. Exit                      |"
+  echo "|______________________________|"
+  echo 
 
-    while true
-    do
-      read -p "Enter your choose: " num
-      case $num in
-          1)
-              #add field
-              add_field_fun
-              ;;
-          2)
-              #delete field
-              delete_field_fun
-              break
-              ;;
-          3)
-              #change datatype of field
-              ch_datatype_field
-              break
-              ;;
-          4)
-              #change table name
-              ch_table_name
-              break
-              ;;
-          5)
-              table_menu_fun
-              ;;
-          6)
-              exit_fun
-              ;;
-          *)
-              matched_fun
-      esac
-    done
+  while true
+  do
+    read -p "Enter your choose: " num
+    case $num in
+      1)
+        #add field
+        add_field_fun
+        ;;
+      2)
+        #delete field
+        delete_field_fun
+        break
+        ;;
+      3)
+        #change datatype of field
+        ch_datatype_field
+        break
+        ;;
+      4)
+        #change table name
+        ch_table_name
+        break
+        ;;
+      5)
+        table_menu_fun
+        ;;
+      6)
+        exit_fun
+        ;;
+      *)
+        matched_fun
+    esac
+  done
 }
 function insert_record(){
   sep="|"
@@ -723,100 +711,77 @@ menu_fun(){
 
 create_field_fun(){
 
-    value=""
-  read -p "(Create field) Enter name of field: " colm_name
-    echo
-    echo " ___ choose data type ___"
-    echo "| 1. Integer             |"
-    echo "| 2. String              |"
-    echo "|________________________|"
+  value=""
+  data_type_fun
+  while true
+  do
+    check_key=$(grep -c '|key|' .$table_name)
+    if [ ! $check_key == 1 ]
+    then
+      read -p "Is this field ($colm_name) primary key? (y/n) : " key
+      if [  $key == "y" ]
+      then
+        key="key"
+        break
+      elif [ $key == "n" ]
+      then
+        key="-"
+        break
+      else
+        matched_fun
+      fi      
+    else
+      key="-"
+      break
+    fi
+  done
+  if [ $key == "-" ]
+  then 
+    echo 
+    echo " ____ Options on field ____"   
+    echo "| 1. Have default value    |"
+    echo "| 2. Not empty             |" 
+    echo "| 3. uniqueness field      |"
+    echo "| 4. No options            |"
+    echo "|__________________________|" 
     echo
     while true
     do
-        read -p "Enter data type of ($colm_name) column: " data_type
-        case $data_type in
-            1)
-              data_type="int"
-              break
-              ;;
-            2)
-              data_type="string"
-              break
-              ;;
-            *)
-              matched_fun
-        esac
-    done
-
-    while true
-    do
-        check_key=$(grep -c '|key|' .$table_name)
-        if [ ! $check_key == 1 ]
-        then
-          read -p "Is this field ($colm_name) primary key? (y/n) : " key
-            if [  $key == "y" ]
-            then
-              key="key"
-              break
-            elif [ $key == "n" ]
-            then
-              key="-"
-              break
-            else
-              matched_fun
-            fi      
-        else
-            key="-"
-            break
-        fi
-    done
-    if [ $key == "-" ]
-    then 
-      echo 
-      echo " ____ Options on field ____"   
-      echo "| 1. Have default value    |"
-      echo "| 2. Not empty             |" 
-      echo "| 3. uniqueness field      |"
-      echo "| 4. No options            |"
-      echo "|__________________________|" 
-      echo
-      while true
-      do
-          read -p "Enter your choose: " opt_num
-          if [ $opt_num == 1 ]
+      read -p "Enter your choose: " opt_num
+      if [ $opt_num == 1 ]
+      then
+        while true
+        do  
+          read -p "Enter default value ($data_type) : " value
+          key="default|"$value
+          if [ $data_type == "int" ]
           then
-              while true
-              do  
-                read -p "Enter default value ($data_type) : " value
-                key="default|"$value
-                if [ $data_type == "int" ]
-                then
-                    d=$(($value+0)) 
-                  if [ $d == 0 ]
-                  then
-                    continue
-                  fi  
-                fi
-                break
-              done     
-              break
-            elif [ $opt_num == 2 ]
-            then  
-              key="notnull"
-              break
-          elif [ $opt_num == 3 ]
-          then  
-              key="unique"
-              break
-          elif [ $opt_num == 4 ]
-          then  
-              key="-"
-              break 
-            else       
-              matched_fun
+            d=$(($value+0)) 
+            if [ $d == 0 ]
+            then
+              continue
+            fi  
           fi
-      done
-    fi    
+          break
+        done     
+        break
+      elif [ $opt_num == 2 ]
+      then  
+        key="notnull"
+        break
+      elif [ $opt_num == 3 ]
+      then  
+        key="unique"
+        break
+      elif [ $opt_num == 4 ]
+      then  
+        key="-"
+        break 
+      else       
+        matched_fun
+      fi
+    done
+  fi    
 } 
 
 delete_field_fun(){
@@ -881,20 +846,18 @@ delete_field_fun(){
 
 ch_datatype_field(){
    
-
-   	  clear
-    while true
-    do
-      read -p "(Change Metadata) Enter name of table: " table_name
-      if [ -f $table_name ]
-      then
-          #change datatype
-            ch_datatype_fun
-      else
-          echo "This table --> $table_name not exist !"
-      fi
-    done
-
+  clear
+  while true
+  do
+    read -p "(Change Metadata) Enter name of table: " table_name
+    if [ -f $table_name ]
+    then
+      #change datatype
+      ch_datatype_fun
+    else
+      echo "This table --> $table_name not exist !"
+    fi
+  done
 }
 
 ch_datatype_fun(){
@@ -903,7 +866,7 @@ ch_datatype_fun(){
 
   sep="|"
   line_data=$(sed -n '1p' $table_name)
-    echo "Table ($table_name) fields: "$line_data
+  echo "Table ($table_name) fields: "$line_data
   while true 
   do
     read -p "(Change datatype) Enter name of field: " field_name  
@@ -912,35 +875,15 @@ ch_datatype_fun(){
     then
       new_c=$(echo $c | cut -d'|' -f 1)
       new_c=$new_c$sep
-      echo
-            echo " ________ Choose ________"
-            echo "| 1. Integer             |"
-            echo "| 2. String              |"
-            echo "|________________________|"
-            echo
-            while true
-            do 
-                read -p "(Change datatype) Enter your choose: " num
-                if [ $num == 1 ]
-                then  
-                  num="int"
-                  break
-                elif [ $num == 2 ]
-                then     
-                  num="string"
-                  break         
-                else
-                    matched_fun
-                fi  
-            done
-            new_c=$new_c$num$sep$(echo $c | cut -d'|' -f 3-)
-            sed -i "s/$c/$new_c/g" .$table_name
-            echo "$field_name --> datatype update successfully"
-            menu_fun
-        else
+      data_type_fun
+      new_c=$new_c$num$sep$(echo $c | cut -d'|' -f 3-)
+      sed -i "s/$c/$new_c/g" .$table_name
+      echo "$field_name --> datatype update successfully"
+      menu_fun
+    else
       echo " $field_name --> This field not exist !"
     fi  
-    done
+  done
 }
 
 ch_table_name(){
@@ -972,9 +915,9 @@ ch_table_name(){
 create_DB_fun(){
   
   read -p "(Create DB) Enter DB name: " DB_name
-  if [ ! -e $DB_name ] 
+  if [ ! -e DBMS/$DB_name ] 
   then
-     mkdir $DB_name
+     mkdir DBMS/$DB_name
      echo " $DB_name --> DB created successfully."
   else
      echo  " $DB_name --> DB already exist !"
@@ -985,9 +928,9 @@ create_DB_fun(){
 drop_DB_fun(){
   
   read -p "(Drop DB) Enter DB name: " db_name
-  if [ -e $db_name ] && [ -d $db_name ]
+  if [ -e DBMS/$db_name ] && [ -d DBMS/$db_name ]
   then
-     rm -r $db_name
+     rm -r DBMS/$db_name
      echo " $db_name --> DB deleted successfully."
   else
      echo  " $db_name --> DB not exist !"
@@ -997,12 +940,12 @@ drop_DB_fun(){
 
 show_DB_fun(){
 
-  arr_DB=$( ls  )
+  arr_DB=$( ls DBMS )
   echo
   echo " ________ Databases  ________"
   for DB in $arr_DB
   do
-    if [ -d $DB ]
+    if [ -d DBMS/$DB ]
     then
         echo "| $DB"     
     fi
@@ -1048,32 +991,32 @@ main_menu_fun(){
   do
     case $num in 
       1)
-         #select DB
-         select_menu_fun
-         ;;
+        #select DB
+        select_menu_fun
+        ;;
       2)
-         #create DB
-         create_DB_fun 
-         read -p "Enter your choose number: " num
-         ;;
+        #create DB
+        create_DB_fun 
+        read -p "Enter your choose number: " num
+        ;;
       3)
-         #drop DB
-         drop_DB_fun
-         read -p "Enter your choose number: " num
-         ;;
+        #drop DB
+        drop_DB_fun
+        read -p "Enter your choose number: " num
+        ;;
       4)
-         #show DB
-         show_DB_fun
-         read -p "Enter your choose number: " num
-         ;;
+        #show DB
+        show_DB_fun
+        read -p "Enter your choose number: " num
+        ;;
       5)
-         #exit
-         exit_fun
-         ;;
+        #exit
+        exit_fun
+        ;;
       *) 
-         # not matched
-         matched_fun
-         read -p "Enter your choose number: " num
+        # not matched
+        matched_fun
+        read -p "Enter your choose number: " num
     esac
   done
 }
