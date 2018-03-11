@@ -5,7 +5,6 @@ mkdir DBMS
 
 table_menu_fun(){
  
-  clear
   echo
   echo " ________ Table menu  ________"
   echo "| 1. Show Tables              |"
@@ -329,8 +328,6 @@ create_table_fun(){
 }
 
 alter_table_fun(){
-
-  clear
 
   echo 
   echo " _________ Alter menu _________"
@@ -670,11 +667,7 @@ add_field_fun(){
           do
               sed -i "s/$new_line/$new_line$sep$value/" $table_name 
           done < .q
-          rm .q 
-          if [ $key == "key" ]
-          then
-            opt_num="-"
-          fi  
+          rm .q  
           table_metadata=$new_line$colm_name$sep$data_type$sep$key
           echo -e $table_metadata >> .$table_name
           echo
@@ -715,8 +708,8 @@ create_field_fun(){
   data_type_fun
   while true
   do
-    check_key=$(grep -c '|key|' .$table_name)
-    if [ ! $check_key == 1 ]
+    check_key=$(grep -c '|key' .$table_name)
+    if [  $check_key == 0 ]
     then
       read -p "Is this field ($colm_name) primary key? (y/n) : " key
       if [  $key == "y" ]
@@ -786,7 +779,6 @@ create_field_fun(){
 
 delete_field_fun(){
 
-	clear
   while true
   do
     read -p "(Delete field) Enter name of table: " table_name
@@ -800,8 +792,8 @@ delete_field_fun(){
         c=$(sed -n "/$field_name/p" $table_name)
         if [ $c ]  
         then
-                    sed -i "/$field_name/d" .$table_name
                     lines_num=$(wc -l < .$table_name)
+                    sed -i "/$field_name/d" .$table_name
                     count=1
                     while [ $count -le $lines_num ]
                     do
@@ -846,7 +838,6 @@ delete_field_fun(){
 
 ch_datatype_field(){
    
-  clear
   while true
   do
     read -p "(Change Metadata) Enter name of table: " table_name
@@ -862,8 +853,6 @@ ch_datatype_field(){
 
 ch_datatype_fun(){
  
- clear
-
   sep="|"
   line_data=$(sed -n '1p' $table_name)
   echo "Table ($table_name) fields: "$line_data
@@ -875,7 +864,27 @@ ch_datatype_fun(){
     then
       new_c=$(echo $c | cut -d'|' -f 1)
       new_c=$new_c$sep
-      data_type_fun
+      echo
+      echo " ________ Choose ________"
+            echo "| 1. Integer             |"
+            echo "| 2. String              |"
+            echo "|________________________|"
+            echo
+            while true
+            do 
+                read -p "(Change datatype) Enter your choose: " num
+                if [ $num == 1 ]
+                then  
+                  num="int"
+                  break
+                elif [ $num == 2 ]
+                then     
+                  num="string"
+                  break         
+                else
+                    matched_fun
+                fi  
+            done
       new_c=$new_c$num$sep$(echo $c | cut -d'|' -f 3-)
       sed -i "s/$c/$new_c/g" .$table_name
       echo "$field_name --> datatype update successfully"
@@ -888,7 +897,6 @@ ch_datatype_fun(){
 
 ch_table_name(){
   
-  clear 
   while true
   do
     read -p "Enter name of table: " table_name
