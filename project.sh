@@ -949,8 +949,17 @@ ch_datatype_field(){
     read -p "(Change Metadata) Enter name of table: " table_name
     if [ -f $table_name ]
     then
-      #change datatype
-      ch_datatype_fun
+      lines_file=$(grep -c "" $table_name)
+      if [ $lines_file -eq 1 ]
+      then  
+        #change datatype
+        ch_datatype_fun
+      else
+        echo
+        echo "$table_name --> this table not empty so you can't change datatype in it."  
+        echo
+        menu_fun
+      fi  
     else
       echo "This table --> $table_name not exist !"
     fi
@@ -961,7 +970,9 @@ ch_datatype_fun(){
  
   sep="|"
   line_data=$(sed -n '1p' $table_name)
+  echo
   echo "Table ($table_name) fields: "$line_data
+  echo
   while true 
   do
     read -p "(Change datatype) Enter name of field: " field_name  
