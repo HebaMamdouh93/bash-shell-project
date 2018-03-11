@@ -1,2 +1,2 @@
-id|int|key
-age|string|notnull
+id|string|key
+n|string|notnull

@@ -336,8 +336,9 @@ alter_table_fun(){
   echo "| 2. Delete field              |"
   echo "| 3. Change datatype of field  |"
   echo "| 4. Change table name         |"
-  echo "| 5. Back to table menu        |"
-  echo "| 6. Exit                      |"
+  echo "| 5. Change field name         |"
+  echo "| 6. Back to table menu        |"
+  echo "| 7. Exit                      |"
   echo "|______________________________|"
   echo 
 
@@ -365,9 +366,14 @@ alter_table_fun(){
         break
         ;;
       5)
+        #change field name
+        ch_field_name
+        break
+        ;;  
+      6)
         table_menu_fun
         ;;
-      6)
+      7)
         exit_fun
         ;;
       *)
@@ -375,6 +381,51 @@ alter_table_fun(){
     esac
   done
 }
+
+ch_field_name(){
+
+  while true
+  do
+    read -p "(Change field name) Enter table name: " table_name
+    if [ -f $table_name ]
+    then
+      first_line=$(sed -n '1p' $table_name)
+      echo
+      echo " table fields: $first_line"
+      echo
+      while true
+      do
+        read -p "(Change field name) Enter field name: " field_name
+        check_field=$(sed -n "/^$field_name|/p" .$table_name)
+
+        if [ ! $check_field == "" ]
+        then
+          while true
+          do 
+            read -p "Enter new name of field ($field_name): " new_f_name
+            check_field=$(sed -n "/$new_f_name/p" .$table_name)
+            if [ $check_field ]
+            then
+              echo "There is a field has the same name !"
+            else
+              sed -i "s/^$field_name|/$new_f_name|/g" .$table_name
+              sed -i "s/$field_name/$new_f_name/" $table_name
+              echo
+              echo "Field name changed successfully"
+              menu_fun
+            fi
+          done    
+        else
+          echo "$field_name --> field name not exist"
+        fi
+      done  
+      menu_fun 
+    else
+      echo "$table_name --> table not exist"
+    fi    
+  done  
+}
+
 function insert_record(){
   sep="|"
   declare -i count=2
