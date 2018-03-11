@@ -7,7 +7,6 @@ cd DBMS
 
 table_menu_fun(){
  
-    clear
     echo
     echo " ________ Table menu  ________"
     echo "| 1. Show Tables              |"
@@ -51,6 +50,7 @@ table_menu_fun(){
       5)
         #add record
         insert_record
+        back_fun
         ;;
       6)
         #edit records
@@ -476,7 +476,6 @@ function insert_record(){
      echo $queryIns
      echo $queryIns >> $tableName
      echo "Data Inserted Successfully"
-     table_menu_fun
   fi
 }
 function update_record(){
