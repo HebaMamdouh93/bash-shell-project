@@ -1,0 +1,4 @@
+name|string|-
+id|int|key
+email|int|unique
+age|int|default|15
