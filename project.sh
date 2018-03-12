@@ -948,18 +948,9 @@ ch_datatype_field(){
   do
     read -p "(Change Metadata) Enter name of table: " table_name
     if [ -f $table_name ]
-    then
-      lines_file=$(grep -c "" $table_name)
-      if [ $lines_file -eq 1 ]
-      then  
-        #change datatype
-        ch_datatype_fun
-      else
-        echo
-        echo "$table_name --> this table not empty so you can't change datatype in it."  
-        echo
-        menu_fun
-      fi  
+    then 
+      #change datatype
+      ch_datatype_fun
     else
       echo "This table --> $table_name not exist !"
     fi
@@ -967,7 +958,7 @@ ch_datatype_field(){
 }
 
 ch_datatype_fun(){
- 
+
   sep="|"
   line_data=$(sed -n '1p' $table_name)
   echo
@@ -977,31 +968,36 @@ ch_datatype_fun(){
   do
     read -p "(Change datatype) Enter name of field: " field_name  
     c=$(sed -n "/^$field_name|/p" .$table_name)
+    ##############################   check field empty or not  ########################
+    line_of_field=$(grep -c "^$field_name|" .$table_name)
+
+    
+
     if [ $c ]  
     then
       new_c=$(echo $c | cut -d'|' -f 1)
       new_c=$new_c$sep
       echo
       echo " ________ Choose ________"
-            echo "| 1. Integer             |"
-            echo "| 2. String              |"
-            echo "|________________________|"
-            echo
-            while true
-            do 
-                read -p "(Change datatype) Enter your choose: " num
-                if [ $num == 1 ]
-                then  
-                  num="int"
-                  break
-                elif [ $num == 2 ]
-                then     
-                  num="string"
-                  break         
-                else
-                    matched_fun
-                fi  
-            done
+      echo "| 1. Integer             |"
+      echo "| 2. String              |"
+      echo "|________________________|"
+      echo
+      while true
+      do 
+        read -p "(Change datatype) Enter your choose: " num
+        if [ $num == 1 ]
+        then  
+          num="int"
+          break
+        elif [ $num == 2 ]
+        then     
+          num="string"
+          break         
+        else
+          matched_fun
+        fi  
+      done
       new_c=$new_c$num$sep$(echo $c | cut -d'|' -f 3-)
       sed -i "s/$c/$new_c/g" .$table_name
       echo "$field_name --> datatype update successfully"
