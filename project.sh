@@ -636,8 +636,11 @@ then
 else
   read -p "Enter regex update:" regexUp
   read -p "Enter New Value To Update:" newv
-  sed  -i "s/$regexUp/$newv/g" $tableName
-  echo "Regex Match Updated Successfully"
+    colsNum=`awk 'END{print NR}' $tableName`
+    #update data with regex match
+  for (( r = 2; r < $colsNum; r++ )); do
+      sed -i "${r}s/$regexUp/$newv/g" $tableName
+  done 
 fi
 }
 function drop_table(){
