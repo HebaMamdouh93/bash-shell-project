@@ -1,0 +1,4 @@
+Field|Type|key
+id|int|PK
+namee|str|
+gender|string|-
