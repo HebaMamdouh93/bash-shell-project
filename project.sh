@@ -17,8 +17,9 @@ table_menu_fun(){
   echo "| 7. Delete records           |"
   echo "| 8. Select records           |"
   echo "| 9. Drop table               |"
-  echo "| 10. Back to main menu       |"
-  echo "| 11. Exit                    |"
+  echo "| 10.Display table            |"
+  echo "| 11. Back to main menu       |"
+  echo "| 12. Exit                    |"
   echo "|_____________________________|"
   echo
   
@@ -68,12 +69,17 @@ table_menu_fun(){
         drop_table
         back_fun
         ;;
-      10) 
+      10)
+      #display table
+      display_table
+      ;;
+
+      11) 
         #back to main menu
         cd ../..
         main_menu_fun
         ;;
-      11)
+      12)
         #exit
         exit_fun
         ;;
@@ -440,7 +446,16 @@ ch_field_name(){
     fi    
   done  
 }
-
+display_table(){
+read -p "Insert Table Name:" tableName
+  if [ ! -f $tableName ];
+    then
+      echo "Error: Table Not exsist"
+  else
+    cat $tableName
+    table_menu_fun
+  fi  
+}
 function insert_record(){
   sep="|"
   declare -i count=2
