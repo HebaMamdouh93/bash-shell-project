@@ -1,5 +1,6 @@
 #!/bin/bash
-
+trap 'echo "ctrl+c & ctrl+z is trapped,this script cannot be
+stopped"' 2 20
 # DBMS 
 mkdir DBMS
 
@@ -700,8 +701,11 @@ then
 else
   read -p "Enter regex update:" regexUp
   read -p "Enter New Value To Update:" newv
-  sed  -i "s/$regexUp/$newv/g" $tableName
-  echo "Regex Match Updated Successfully"
+    colsNum=`awk 'END{print NR}' $tableName`
+    #update data with regex match and skip first line fields
+  for (( r = 2; r < $colsNum; r++ )); do
+      sed -i "${r}s/$regexUp/$newv/g" $tableName
+  done 
 fi
 }
 function drop_table(){
@@ -1144,6 +1148,11 @@ main_menu_fun(){
 ################################## SELECT & SORT #############################################
 #select Part
 function selectMenu(){
+  if [ ! -d HTML ] 
+  then
+     mkdir HTML CSV
+  fi
+
   echo 
   echo " _________________ Select menu _________________________"
   echo "| 1. Select All from a Table                            |"
@@ -1217,7 +1226,7 @@ read -p "Please Enter the Name of file:" fName
       case $fileFormat in
 
         1 )
-        if [[ -f $fName.html ]]; then
+        if [[ -f HTML/$fName.html ]]; then
   echo "File already existed "
   selectMenu
   fi  
@@ -1236,25 +1245,25 @@ read -p "Please Enter the Name of file:" fName
                 }
                 }
                 END{print "</body></html>"
-              }' $tableName > $fName.html
+              }' $tableName > HTML/$fName.html
               echo "File saved successfully"
            read -p "Do You want to open file on browser[y/n]?" ans
             if [[ $ans == "y" ]];then
-                xdg-open "$fName.html"
+                xdg-open "HTML/$fName.html"
             fi
 
               selectMenu
             ;;
         2 )
-        if [[ -f $fName.csv ]]; then
+        if [[ -f CSV/$fName.csv ]]; then
   echo "File already existed "
   selectMenu
   fi
-            echo "$printed_data"  | tr '|' ',' > $fName.csv
+            echo "$printed_data"  | tr '|' ',' > CSV/$fName.csv
             echo "File saved successfully"
             read -p "Do You want to open file on browser[y/n]?" ans
             if [[ $ans == "y" ]];then
-                libreoffice "$fName.csv"
+                libreoffice "CSV/$fName.csv"
             fi
             
             
@@ -1291,7 +1300,7 @@ read -p "Please Enter the Name of file:" fName
       
       case $fileFormat in
 
-        1 )if [[ -f $fName.html ]]; then
+        1 )if [[ -f HTML/$fName.html ]]; then
   echo "File already existed "
   selectMenu
   fi  
@@ -1310,24 +1319,24 @@ read -p "Please Enter the Name of file:" fName
                 }
                 }
                 END{print "</table></body></html>"
-              }' $tableName > $fName.html
+              }' $tableName > HTML/$fName.html
            echo "File saved successfully"
            read -p "Do You want to open file on browser[y/n]?" ans
             if [[ $ans == "y" ]];then
-                xdg-open "$fName.html"
+                xdg-open "HTML/$fName.html"
             fi
               selectMenu
             ;;
         2 )
-        if [[ -f $fName.csv ]]; then
+        if [[ -f CSV/$fName.csv ]]; then
   echo "File already existed "
   selectMenu
   fi
-echo "$printed_data"  | tr '|' ',' > $fName.csv
+echo "$printed_data"  | tr '|' ',' > CSV/$fName.csv
 echo "File saved successfully"
 read -p "Do You want to open file on browser[y/n]?" ans
             if [[ $ans == "y" ]];then
-                libreoffice "$fName.csv"
+                libreoffice "CSV/$fName.csv"
             fi
 selectMenu
             ;;
@@ -1375,7 +1384,7 @@ read -p "Please Enter the Name of file:" fName
       case $fileFormat in
 
         1 )
-                  if [[ -f $fName.html ]]; then
+                  if [[ -f HTML/$fName.html ]]; then
             echo "File already existed "
             selectMenu
             fi  
@@ -1394,24 +1403,24 @@ read -p "Please Enter the Name of file:" fName
                 }
                 }
                 END{print "</body></html>"
-              }' $tableName > $fName.html
+              }' $tableName > HTML/$fName.html
            echo "File saved successfully"
            read -p "Do You want to open file on browser[y/n]?" ans
             if [[ $ans == "y" ]];then
-                xdg-open "$fName.html"
+                xdg-open "HTML/$fName.html"
             fi
               selectMenu
             ;;
         2 )
-        if [[ -f $fName.csv ]]; then
+        if [[ -f CSV/$fName.csv ]]; then
   echo "File already existed "
   selectMenu
   fi
-echo "$printed_data"  | tr '|' ',' > $fName.csv
+echo "$printed_data"  | tr '|' ',' > CSV/$fName.csv
 echo "File saved successfully"
 read -p "Do You want to open file on browser[y/n]?" ans
             if [[ $ans == "y" ]];then
-                libreoffice "$fName.csv"
+                libreoffice "CSV/$fName.csv"
             fi
 selectMenu
             ;;
@@ -1436,6 +1445,8 @@ ask_user_Tname
 read -p "Please Enter The Fields Name that wanted to select data from it: " fieldName
 #split the fields name into array
 IFS=' ' read -r -a array <<< "$fieldName"
+echo "${array[@]}"
+fieldNums=""
 #get the number of each field that the user entered his name  and store them into array
 for element in "${array[@]}"
 do
@@ -1478,7 +1489,7 @@ read -p "Please Enter the Name of file:" fName
       case $fileFormat in
 
       1 ) 
-          if [[ -f $fName.html ]]; then
+          if [[ -f HTML/$fName.html ]]; then
       echo "File already existed "
       selectMenu
       fi 
@@ -1502,24 +1513,24 @@ read -p "Please Enter the Name of file:" fName
                 }}
                 END{print "</body></html>"
             
-              }' $tableName > $fName.html
+              }' $tableName > HTML/$fName.html
               echo "File saved successfully"
            read -p "Do You want to open file on browser[y/n]?" ans
             if [[ $ans == "y" ]];then
-                xdg-open "$fName.html"
+                xdg-open "HTML/$fName.html"
             fi
       selectMenu
             ;;
       2 )
-      if [[ -f $fName.csv ]]; then
+      if [[ -f CSV/$fName.csv ]]; then
   echo "File already existed "
   selectMenu
   fi
-      echo "$printed_data" | tr '|' ',' > $fName.csv
+      echo "$printed_data" | tr '|' ',' > CSV/$fName.csv
       echo "File saved successfully"
 read -p "Do You want to open file on browser[y/n]?" ans
             if [[ $ans == "y" ]];then
-                libreoffice "$fName.csv"
+                libreoffice "CSV/$fName.csv"
             fi
         selectMenu
                   ;;
