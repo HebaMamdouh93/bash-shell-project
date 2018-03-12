@@ -982,50 +982,57 @@ ch_datatype_fun(){
     c=$(sed -n "/^$field_name|/p" .$table_name)
     ##############################   check field empty or not  ########################
     line_of_field=$(grep -c "^$field_name|" .$table_name)
+    flag=0
 
-    while read line
-    do
-      value_of_field=$( echo $line | cut -d'|' -f $line_of_field)
-      if [ ! $value_of_field == "" ]
+    #while read line
+    #do
+      #value_of_field=$( echo $line | cut -d'|' -f $line_of_field)
+      #echo $value_of_field
+      #if [ ! $value_of_field == "" ]
+      #then
+        #echo "This field already has data,cant change datatype"
+        #back_fun
+        #flag=1
+       # break         
+      #fi  
+    #done < $(sed -n "2,$p" $table_name)
+    if [ $flag == 0 ]
+    then  
+      if [ $c ]  
       then
-        echo "This field already has data,cant change datatype"
-        back_fun
-        break         
-      fi  
-    done < $table_name
-
-    if [ $c ]  
-    then
-      new_c=$(echo $c | cut -d'|' -f 1)
-      new_c=$new_c$sep
-      echo
-      echo " ________ Choose ________"
-      echo "| 1. Integer             |"
-      echo "| 2. String              |"
-      echo "|________________________|"
-      echo
-      while true
-      do 
-        read -p "(Change datatype) Enter your choose: " num
-        if [ $num == 1 ]
-        then  
-          num="int"
-          break
-        elif [ $num == 2 ]
-        then     
-          num="string"
-          break         
-        else
-          matched_fun
-        fi  
-      done
-      new_c=$new_c$num$sep$(echo $c | cut -d'|' -f 3-)
-      sed -i "s/$c/$new_c/g" .$table_name
-      echo "$field_name --> datatype update successfully"
-      menu_fun
+        new_c=$(echo $c | cut -d'|' -f 1)
+        new_c=$new_c$sep
+        echo
+        echo " ________ Choose ________"
+        echo "| 1. Integer             |"
+        echo "| 2. String              |"
+        echo "|________________________|"
+        echo
+        while true
+        do 
+          read -p "(Change datatype) Enter your choose: " num
+          if [ $num == 1 ]
+          then  
+            num="int"
+            break
+          elif [ $num == 2 ]
+          then     
+            num="string"
+            break         
+          else
+            matched_fun
+          fi  
+        done
+        new_c=$new_c$num$sep$(echo $c | cut -d'|' -f 3-)
+        sed -i "s/$c/$new_c/g" .$table_name
+        echo "$field_name --> datatype update successfully"
+        menu_fun
+      else
+        echo " $field_name --> This field not exist !"
+      fi
     else
-      echo " $field_name --> This field not exist !"
-    fi  
+      menu_fun
+    fi    
   done
 }
 
