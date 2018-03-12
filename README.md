@@ -32,4 +32,10 @@ user can list all table in a certain database by choose "show tables" option fro
 user can drop a certain table in a certain database by choose "drop table" and enter the table name
 -----------------------------------------------------------------
 
+Team Member:
+_______________________________________________________________________
 
+Name: Nada Adel Elsayed --> github username: 
+Name: Heba Mamdouh Ali --> github username: HebaMamdouh93
+Name: Ghada Khamis Mohamed --> github username: ghadakhamis
+_______________________________________________________________________

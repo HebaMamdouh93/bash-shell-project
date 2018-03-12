@@ -2,23 +2,24 @@
 
 # DBMS 
 mkdir DBMS
-table_menu_fun(){
-    echo
-    echo " ________ Table menu  ________"
-    echo "| 1. Show Tables              |"
-    echo "| 2. Create table             |"
-    echo "| 3. Alter table              |"
-    echo "| 4. Sort table               |"
-    echo "| 5. Add record               |"
-    echo "| 6. Edit records             |"
-    echo "| 7. Delete records           |"
-    echo "| 8. Select records           |"
-    echo "| 9. Drop table               |"
-    echo "| 10. Back to main menu       |"
-    echo "| 11. Exit                    |"
-    echo "|_____________________________|"
-    echo
 
+table_menu_fun(){
+
+  echo
+  echo " ________ Table menu  ________"
+  echo "| 1. Show Tables              |"
+  echo "| 2. Create table             |"
+  echo "| 3. Alter table              |"
+  echo "| 4. Sort table               |"
+  echo "| 5. Add record               |"
+  echo "| 6. Edit records             |"
+  echo "| 7. Delete records           |"
+  echo "| 8. Select records           |"
+  echo "| 9. Drop table               |"
+  echo "| 10. Back to main menu       |"
+  echo "| 11. Exit                    |"
+  echo "|_____________________________|"
+  echo
   
   #user insert choose
   read -p "Enter your choose number: " num1
@@ -131,31 +132,45 @@ back_create_table(){
   done
 }
 
-data_type_fun(){
 
-  read -p "Enter name of field number ($column_num) : " colm_name
-  echo
-  echo " ___ choose data type ___"
-  echo "| 1. Integer             |"
-  echo "| 2. String              |"
-  echo "|________________________|"
-  echo
+
+data_type_fun(){
+  
   while true
   do
-    read -p "Enter data type of ($colm_name) column: " data_type
-    case $data_type in
-      1)
-        data_type="int"
-        break
-        ;;
-      2)
-        data_type="string"
-        break
-        ;;
-      *)
-        matched_fun
-    esac
-  done
+    read -p "Enter name of field number ($column_num) : " colm_name
+    check_field_name=$(echo $meta_data | sed -n "/$colm_name|/p")
+    if [ ! $check_field_name ]
+    then  
+      echo
+      echo " ___ choose data type ___"
+      echo "| 1. Integer             |"
+      echo "| 2. String              |"
+      echo "|________________________|"
+      echo
+      while true
+      do
+        read -p "Enter data type of ($colm_name) column: " data_type
+        case $data_type in
+          1)
+            data_type="int"
+            break
+            ;;
+          2)
+            data_type="string"
+            break
+            ;;
+          *)
+            matched_fun
+        esac
+      done
+      break
+    else
+      echo
+      echo "There is a field with this name"
+      echo
+    fi
+  done    
 }
 
 select_menu_fun(){
@@ -329,16 +344,15 @@ create_table_fun(){
 
 alter_table_fun(){
 
-  clear
-
   echo 
   echo " _________ Alter menu _________"
   echo "| 1. Add field                 |"
   echo "| 2. Delete field              |"
   echo "| 3. Change datatype of field  |"
   echo "| 4. Change table name         |"
-  echo "| 5. Back to table menu        |"
-  echo "| 6. Exit                      |"
+  echo "| 5. Change field name         |"
+  echo "| 6. Back to table menu        |"
+  echo "| 7. Exit                      |"
   echo "|______________________________|"
   echo 
 
@@ -366,9 +380,14 @@ alter_table_fun(){
         break
         ;;
       5)
+        #change field name
+        ch_field_name
+        break
+        ;;  
+      6)
         table_menu_fun
         ;;
-      6)
+      7)
         exit_fun
         ;;
       *)
@@ -376,6 +395,51 @@ alter_table_fun(){
     esac
   done
 }
+
+ch_field_name(){
+
+  while true
+  do
+    read -p "(Change field name) Enter table name: " table_name
+    if [ -f $table_name ]
+    then
+      first_line=$(sed -n '1p' $table_name)
+      echo
+      echo " table fields: $first_line"
+      echo
+      while true
+      do
+        read -p "(Change field name) Enter field name: " field_name
+        check_field=$(sed -n "/^$field_name|/p" .$table_name)
+
+        if [ ! $check_field == "" ]
+        then
+          while true
+          do 
+            read -p "Enter new name of field ($field_name): " new_f_name
+            check_field=$(sed -n "/$new_f_name/p" .$table_name)
+            if [ $check_field ]
+            then
+              echo "There is a field has the same name !"
+            else
+              sed -i "s/^$field_name|/$new_f_name|/g" .$table_name
+              sed -i "s/$field_name/$new_f_name/" $table_name
+              echo
+              echo "Field name changed successfully"
+              menu_fun
+            fi
+          done    
+        else
+          echo "$field_name --> field name not exist"
+        fi
+      done  
+      menu_fun 
+    else
+      echo "$table_name --> table not exist"
+    fi    
+  done  
+}
+
 function insert_record(){
   sep="|"
   declare -i count=2
@@ -679,11 +743,7 @@ add_field_fun(){
           do
               sed -i "s/$new_line/$new_line$sep$value/" $table_name 
           done < .q
-          rm .q 
-          if [ $key == "key" ]
-          then
-            opt_num="-"
-          fi  
+          rm .q  
           table_metadata=$new_line$colm_name$sep$data_type$sep$key
           echo -e $table_metadata >> .$table_name
           echo
@@ -721,11 +781,44 @@ menu_fun(){
 create_field_fun(){
 
   value=""
-  data_type_fun
   while true
   do
-    check_key=$(grep -c '|key|' .$table_name)
-    if [ ! $check_key == 1 ]
+    read -p "(Create field) Enter name of field: " colm_name
+    check_field_name=$(sed -n "/^$colm_name|/p" .$table_name)
+    if [ ! $check_field_name ]
+    then 
+      echo
+      echo " ___ choose data type ___"
+      echo "| 1. Integer             |"
+      echo "| 2. String              |"
+      echo "|________________________|"
+      echo
+      while true
+      do
+        read -p "Enter data type of ($colm_name) column: " data_type
+        if [ $data_type == 1 ]
+        then  
+          data_type="int"
+          break
+        elif [ $data_type == 2 ]
+        then
+          data_type="string"
+          break
+        else
+          matched_fun
+        fi
+      done
+      break
+    else
+      echo
+      echo "There is a field with this name"
+      echo
+    fi  
+  done  
+  while true
+  do
+    check_key=$(grep -c '|key' .$table_name)
+    if [  $check_key == 0 ]
     then
       read -p "Is this field ($colm_name) primary key? (y/n) : " key
       if [  $key == "y" ]
@@ -795,7 +888,6 @@ create_field_fun(){
 
 delete_field_fun(){
 
-	clear
   while true
   do
     read -p "(Delete field) Enter name of table: " table_name
@@ -809,8 +901,8 @@ delete_field_fun(){
         c=$(sed -n "/$field_name/p" $table_name)
         if [ $c ]  
         then
-                    sed -i "/$field_name/d" .$table_name
                     lines_num=$(wc -l < .$table_name)
+                    sed -i "/$field_name/d" .$table_name
                     count=1
                     while [ $count -le $lines_num ]
                     do
@@ -855,14 +947,22 @@ delete_field_fun(){
 
 ch_datatype_field(){
    
-  clear
   while true
   do
     read -p "(Change Metadata) Enter name of table: " table_name
     if [ -f $table_name ]
     then
-      #change datatype
-      ch_datatype_fun
+      lines_file=$(grep -c "" $table_name)
+      if [ $lines_file -eq 1 ]
+      then  
+        #change datatype
+        ch_datatype_fun
+      else
+        echo
+        echo "$table_name --> this table not empty so you can't change datatype in it."  
+        echo
+        menu_fun
+      fi  
     else
       echo "This table --> $table_name not exist !"
     fi
@@ -871,11 +971,11 @@ ch_datatype_field(){
 
 ch_datatype_fun(){
  
- clear
-
   sep="|"
   line_data=$(sed -n '1p' $table_name)
+  echo
   echo "Table ($table_name) fields: "$line_data
+  echo
   while true 
   do
     read -p "(Change datatype) Enter name of field: " field_name  
@@ -884,7 +984,27 @@ ch_datatype_fun(){
     then
       new_c=$(echo $c | cut -d'|' -f 1)
       new_c=$new_c$sep
-      data_type_fun
+      echo
+      echo " ________ Choose ________"
+            echo "| 1. Integer             |"
+            echo "| 2. String              |"
+            echo "|________________________|"
+            echo
+            while true
+            do 
+                read -p "(Change datatype) Enter your choose: " num
+                if [ $num == 1 ]
+                then  
+                  num="int"
+                  break
+                elif [ $num == 2 ]
+                then     
+                  num="string"
+                  break         
+                else
+                    matched_fun
+                fi  
+            done
       new_c=$new_c$num$sep$(echo $c | cut -d'|' -f 3-)
       sed -i "s/$c/$new_c/g" .$table_name
       echo "$field_name --> datatype update successfully"
@@ -897,7 +1017,6 @@ ch_datatype_fun(){
 
 ch_table_name(){
   
-  clear 
   while true
   do
     read -p "Enter name of table: " table_name
@@ -1038,7 +1157,7 @@ function selectMenu(){
   echo "| 2. Select Specific Column from a Table                |"
   echo "| 3. Select All Columns Matching a Certain Regex        |"
   echo "| 4. Select Specific Column Matching a Certain Regex    |"
-  echo "| 5. Back To Options Menu                                |"
+  echo "| 5. Back To Options Menu                               |"
   echo "| 6. Back To Main Menu                                  |"
   echo "| 7. Exit                                               |"
   echo "|_______________________________________________________|"
@@ -1090,31 +1209,141 @@ function selectMenu(){
 #Select All from a Table
 function select_All(){
 # Ask user to enter the table name  
-  read -p "Please Enter Table Name: " tableName
-  if [[ ! -f $tableName ]]; then
-  echo "Table not existed "
-  selectMenu
-  fi 
+  ask_user_Tname
   
-  awk 'BEGIN {FS="|"} {print $0}' $tableName 
+printed_data=$(awk 'BEGIN {FS="|"} {print $0}' $tableName)
+echo $printed_data | tr ' ' '\n'
+
+#Ask user to print the selected records in html format or csv format 
+echo -e "Enter Type of format choose 1) HTML  or choose 2) CSV : "
+read -p "Please Enter the Name of file:" fName
+
+  select fileFormat in "1" "2"
+    do
+      
+      case $fileFormat in
+
+        1 )
+        if [[ -f $fName.html ]]; then
+  echo "File already existed "
+  selectMenu
+  fi  
+        awk 'BEGIN{FS="|" ; print"<html><head><style>h1{text-align:center;} span{color:red;font-size:20px;font-weight:bold;} label{font-size:20px}</style></head><body> <h1>'$tableName'</h1>";}
+                  {
+                  if(NR==1)
+                    {
+                      for(i=1;i<=NF;i++){ split($0,header,"|") }
+                    }
+                  else{
+                    for(i=1;i<=NF;i++){
+          
+                   print "<span>" header[i] "</span> : <label>" $i  "</label></br>"
+                  }
+                   print "<hr>"
+                }
+                }
+                END{print "</body></html>"
+              }' $tableName > $fName.html
+              echo "File saved successfully"
+           read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                xdg-open "$fName.html"
+            fi
+
+              selectMenu
+            ;;
+        2 )
+        if [[ -f $fName.csv ]]; then
+  echo "File already existed "
+  selectMenu
+  fi
+            echo "$printed_data"  | tr '|' ',' > $fName.csv
+            echo "File saved successfully"
+            read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                libreoffice "$fName.csv"
+            fi
+            
+            
+            selectMenu
+            ;; 
+        * ) echo "Wrong Choice" ;;
+      esac
+    done
 } 
 
 #Select Specific Column from a Table
 function select_col(){
 
 # Ask user to enter the table name  
-  read -p "Please Enter Table Name: " tableName
-  if [[ ! -f $tableName ]]; then
-  echo "Table not existed "
+ask_user_Tname
+
+# Ask user to enter the name of required field
+get_field_num
+
+#check if field already existed in table or not
+if [[ $fieldNum == "" ]]; then
+  echo "Field Not exist in table"
+  selectMenu
+else
+
+  printed_data=$(awk 'BEGIN {FS="|"} {print $'$fieldNum'}' $tableName)
+echo $printed_data | tr ' ' '\n'
+#Ask user to print the selected records in html format or csv format 
+echo -e "Enter Type of format choose 1) HTML  or choose 2) CSV : "
+read -p "Please Enter the Name of file:" fName
+
+  select fileFormat in "1" "2"
+    do
+      
+      case $fileFormat in
+
+        1 )if [[ -f $fName.html ]]; then
+  echo "File already existed "
+  selectMenu
+  fi  
+        awk 'BEGIN{FS="|" ; print"<html><head><style> table {margin:0 auto;} h1{text-align:center;} span{color:red;font-size:30px;font-weight:bold;} label{font-size:20px}</style></head><body> <h1>'$tableName'</h1> <table border=1>";}
+                  {
+                  if(NR==1)
+                    {
+                      print "<tr><td><span>" $'$fieldNum' "</span></td></tr></br>"
+                    }
+                  else{
+                   
+          
+                   print "<tr><td><label>"  $'$fieldNum'  "</label></td></tr></br>"
+                  
+                  
+                }
+                }
+                END{print "</table></body></html>"
+              }' $tableName > $fName.html
+           echo "File saved successfully"
+           read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                xdg-open "$fName.html"
+            fi
+              selectMenu
+            ;;
+        2 )
+        if [[ -f $fName.csv ]]; then
+  echo "File already existed "
   selectMenu
   fi
-
-  # Ask to enter the number of field that wanted to reterive data from it
-  read -p "Please Enter The Number of Column :" colNum
-
-  awk 'BEGIN {FS="|"} {print $'$colNum'}' $tableName
+echo "$printed_data"  | tr '|' ',' > $fName.csv
+echo "File saved successfully"
+read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                libreoffice "$fName.csv"
+            fi
+selectMenu
+            ;;
+        * ) echo "Wrong Choice" ;;
+      esac
+    done
 
   selectMenu
+fi
 }
 
 #Select All Columns Matching a Certain Regex 
@@ -1124,17 +1353,10 @@ clear
 echo "Select * From [Table] Where [Field] = [Certain regex]"
 
 # Ask user to enter the table name  
-  read -p "Please Enter Table Name: " tableName
-  if [[ ! -f $tableName ]]; then
-  echo "Table not existed "
-  selectMenu
-  fi
+ask_user_Tname
 
 # Ask user to enter the name of required field
-read -p "Please Enter The required Field Name: " fieldName
-
-#get the number of field that the user entered his name 
-fieldNum=$(awk 'BEGIN{FS="|"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$fieldName'") print i}}}' $tableName)
+get_field_num
 
 #check if field already existed in table or not
 if [[ $fieldNum == "" ]]; then
@@ -1145,29 +1367,59 @@ else
 #Ask user to enter the regex that he/she wants to search for data according to it
 read -p "Please Enter The required Regex value: " regexPattern
 
-awk 'BEGIN {FS="|"} { if($'$fieldNum' ~ /'$regexPattern'/) print $0; }' $tableName
-
+printed_data=$(awk 'BEGIN {FS="|" ; } {
+if(NR==1) { print $0} ;  
+if($'$fieldNum' ~ /'$regexPattern'/) {print $0} ; }   
+' $tableName)
+echo $printed_data | tr ' ' '\n'
 #Ask user to print the selected records in html format or csv format 
 echo -e "Enter Type of format choose 1) HTML  or choose 2) CSV : "
+read -p "Please Enter the Name of file:" fName
+
   select fileFormat in "1" "2"
     do
-      read -p "Please Enter the Name of file:" fName
+      
       case $fileFormat in
 
-        1 )  
-            awk 'BEGIN {FS="|" ; print"<html><head></head><body>"; } {
-if(NR==1) print "<h4>" $0 "</h4>";  
-if($'$fieldNum' ~ /'$regexPattern'/) print $0  "</br>"; }   
-
-END{print "</body></html>"}
-' $tableName > $fName.html
-selectMenu
+        1 )
+                  if [[ -f $fName.html ]]; then
+            echo "File already existed "
+            selectMenu
+            fi  
+        awk 'BEGIN{FS="|" ; print"<html><head><style>h1{text-align:center;} span{color:red;font-size:20px;font-weight:bold;} label{font-size:20px}</style></head><body> <h1>'$tableName'</h1>";}
+                  {
+                  if(NR==1)
+                    {
+                      for(i=1;i<=NF;i++){ split($0,header,"|") }
+                    }
+                  else{
+                    for(i=1;i<=NF;i++){
+          
+                  if($'$fieldNum' ~ /'$regexPattern'/) print "<span>" header[i] "</span> : <label>" $i  "</label></br>"
+                  }
+                  if($'$fieldNum' ~ /'$regexPattern'/) print "<hr>"
+                }
+                }
+                END{print "</body></html>"
+              }' $tableName > $fName.html
+           echo "File saved successfully"
+           read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                xdg-open "$fName.html"
+            fi
+              selectMenu
             ;;
         2 )
- awk 'BEGIN {FS="|" ; } {
-if(NR==1) {gsub("|",",",$0); print $0} ;  
-if($'$fieldNum' ~ /'$regexPattern'/) {gsub("|",",",$0); print $0} ; }   
-' $tableName  > $fName.csv
+        if [[ -f $fName.csv ]]; then
+  echo "File already existed "
+  selectMenu
+  fi
+echo "$printed_data"  | tr '|' ',' > $fName.csv
+echo "File saved successfully"
+read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                libreoffice "$fName.csv"
+            fi
 selectMenu
             ;;
         * ) echo "Wrong Choice" ;;
@@ -1185,11 +1437,7 @@ clear
 echo "Select [specific field] From [Table] Where [Field] = [Certain regex]"
 
 # Ask user to enter the table name  
-  read -p "Please Enter Table Name: " tableName
-  if [[ ! -f $tableName ]]; then
-  echo "Table not existed "
-  selectMenu
-  fi
+ask_user_Tname
 
 # Ask user to enter the name of required field
 read -p "Please Enter The Fields Name that wanted to select data from it: " fieldName
@@ -1221,31 +1469,66 @@ else
 
 #Ask user to enter the regex that he/she wants to search for data according to it
 read -p "Please Enter The required Regex value: " regexPattern
-awk 'BEGIN {FS="|";  OFS = "|"} {
+printed_data=$(awk 'BEGIN {FS="|";  OFS = "|"} {
 if(NR==1) print '$fieldNums';   
-if($'$fNum' ~ /'$regexPattern'/) {  print '$fieldNums' }; }' $tableName
+if($'$fNum' ~ /'$regexPattern'/) {  print '$fieldNums' }; }' $tableName)
+
+echo $printed_data | tr ' ' '\n'  
 
 #Ask user to print the selected records in html format or csv format 
 echo -e "Enter Type of format choose 1) HTML  or choose 2) CSV : "
+read -p "Please Enter the Name of file:" fName
+
   select fileFormat in "1" "2"
     do
-      read -p "Please Enter the Name of file:" fName
+      
       case $fileFormat in
 
-        1 )  
-            awk 'BEGIN {FS="|" ; OFS = "|"; print"<html><head></head><body>"; } {
-      if(NR==1) print "<h4>" '$fieldNums' "</h4>";    
-      if($'$fNum' ~ /'$regexPattern'/) {  print '$fieldNums' "</br>" ;} 
-      END{print "</body></html>"}
-      ' $tableName > $fName.html
+      1 ) 
+          if [[ -f $fName.html ]]; then
+      echo "File already existed "
+      selectMenu
+      fi 
+      awk -v var="$fieldName" 'BEGIN{FS="|" ; print"<html><head><style>h1{text-align:center;} span{color:red;font-size:20px;font-weight:bold;} label{font-size:20px}</style></head><body><h1>'$tableName'</h1>";}
+                  {
+                    
+                  if(NR!=1)
+                    {
+                       
+                       split("'$fieldNums'",fNums,",")
+                       split(var,header," ")
+
+                    for(i in fNums){
+                     
+                  if($'$fNum' ~ /'$regexPattern'/) print "<span>" header[i] "</span> : <label>" $i "</label></br>"
+                
+                  
+                  }
+                  if($'$fNum' ~ /'$regexPattern'/) print "<hr>"
+                
+                }}
+                END{print "</body></html>"
+            
+              }' $tableName > $fName.html
+              echo "File saved successfully"
+           read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                xdg-open "$fName.html"
+            fi
       selectMenu
             ;;
-        2 )
-       awk 'BEGIN {FS="|" ; } {
-      if(NR==1) print '$fieldNums';   
-      if($'$fNum' ~ /'$regexPattern'/) {  print '$fieldNums' }; }   
-      ' $tableName > $fName.csv
-      selectMenu
+      2 )
+      if [[ -f $fName.csv ]]; then
+  echo "File already existed "
+  selectMenu
+  fi
+      echo "$printed_data" | tr '|' ',' > $fName.csv
+      echo "File saved successfully"
+read -p "Do You want to open file on browser[y/n]?" ans
+            if [[ $ans == "y" ]];then
+                libreoffice "$fName.csv"
+            fi
+        selectMenu
                   ;;
         * ) echo "Wrong Choice" ;;
       esac
@@ -1259,24 +1542,18 @@ fi
 function sortTable() {
 
 # Ask user to enter the table name that wanted to sort 
-  read -p "Please Enter Table Name: " tableName
-  if [[ ! -f $tableName ]]; then
-  echo "Table not existed "
-  table_menu_fun
-  fi
+ask_user_Tname
 
 # Ask to enter the number of field that wanted to sort table according to it
-read -p "Please Enter The Name of Column: " colName 
-#get the number of field that the user entered his name 
-colNum=$(awk 'BEGIN{FS="|"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$colName'") print i}}}' $tableName)
+get_field_num
 
 #check if field already existed in table or not
-if [[ $colNum == "" ]]; then
+if [[ $fieldNum == "" ]]; then
   echo "Field Not exist in table"
   table_menu_fun
 else
-  colSort="-k"$colNum
-  colType=$( awk 'BEGIN{FS="|"}{if(NR=='$colNum') print $2}' .$tableName)
+  colSort="-k"$fieldNum
+  colType=$( awk 'BEGIN{FS="|"}{if(NR=='$fieldNum') print $2}' .$tableName)
   echo -e "Enter Type of Sort choose 1) sort ascend​ing or choose 2) sort descending : "
   select sortType in "1" "2"
     do
@@ -1322,7 +1599,7 @@ function deleteMenu(){
   echo " _________________ Delete menu _________________________"
   echo "| 1. Delete All from Table [Truncate table]             |"
   echo "| 2. Delete records under Condition                     |"
-  echo "| 3. Back To Delete Menu                                |"
+  echo "| 3. Back To Options Menu                               |"
   echo "| 4. Back To Main Menu                                  |"
   echo "| 5. Exit                                               |"
   echo "|_______________________________________________________|"
@@ -1345,7 +1622,7 @@ function deleteMenu(){
          ;;
       3)
          #Back To Delete Menu 
-         deleteMenu
+         table_menu_fun
          ;;
       4)
          #Back To Main Menu
@@ -1365,11 +1642,8 @@ function deleteMenu(){
 
 function truncate_table(){
 # Ask user to enter the table name  
-  read -p "Please Enter Table Name: " tableName
-  if [[ ! -f $tableName ]]; then
-  echo "Table not existed "
-  deleteMenu
-  fi
+ask_user_Tname
+
  #truncate table 
   
   sed -n '1p' $tableName > temp && mv temp $tableName
@@ -1385,27 +1659,20 @@ function truncate_table(){
 function delete_records(){
 #delete from [tableName] where [fieldName]==[certain_Pattern]
 # Ask user to enter the table name  
-  read -p "Please Enter Table Name: " tableName
-  if [[ ! -f $tableName ]]; then
-  echo "Table not existed "
-  deleteMenu
-  fi
+ask_user_Tname
 
 # Ask user to enter the name of required field that deleted its data according to certain regex
-read -p "Please Enter The required Field Name: " fName 
-
-#get the number of field that the user entered his name 
-fNum=$(awk 'BEGIN{FS="|"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$fName'") print i}}}' $tableName)
+get_field_num
 
 #check if field already existed in table or not
-if [[ $fNum == "" ]]; then
+if [[ $fieldNum == "" ]]; then
   echo "Field Not exist in table"
   deleteMenu
 else
 
   #Ask user to enter the regex that he/she wants to search for data according to it
   read -p "Please Enter The required Regex value: " regexPattern 
-  NR=$(awk 'BEGIN {FS="|"} { if($'$fNum' ~ /'$regexPattern'/) print NR"d;"; }' $tableName)
+  NR=$(awk 'BEGIN {FS="|"} { if($'$fieldNum' ~ /'$regexPattern'/) print NR"d;"; }' $tableName)
 
   if [[ $NR == "" ]]; then
     echo "Regex Not matched in table"
@@ -1425,5 +1692,25 @@ fi
 
 
 ##############################################################################################
+##################################### Helper Functions ######################################
+# Function to Ask user to enter the table name 
+function ask_user_Tname(){
+ read -p "Please Enter Table Name: " tableName
+  if [[ ! -f $tableName ]]; then
+  echo "Table not existed "
+  table_menu_fun
+  fi  
+}
+
+function get_field_num(){
+echo "The Table [$tableName] has Fields :"
+awk 'BEGIN{FS="|"}{if(NR==1){ print $0 }}' $tableName
+# Ask user to enter the name of required field
+read -p "Please Enter The required Field Name: " fieldName
+
+#get the number of field that the user entered his name 
+fieldNum=$(awk 'BEGIN{FS="|"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$fieldName'") print i}}}' $tableName)
+}
+
 clear
 main_menu_fun
